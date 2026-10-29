@@ -17,7 +17,7 @@
 <title>Ритм</title>
 <script>
 /* Запуск с экрана «Домой»: сразу в последнее открытое приложение */
-(function(){ var P={telo:'telo.html',dengi:'dengi.html',pit:'pitanie.html',tseli:'tseli.html'};
+(function(){ var P={telo:'telo.html',dengi:'dengi.html',pit:'pitanie.html',tseli:'tseli.html',semya:'semya.html'};
  var sa=window.navigator.standalone===true||!!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
  var q=(location.search.match(/[?&]app=([a-z]+)/)||[])[1]; var last=null; try{ last=localStorage.getItem('ritm-ios-last'); }catch(e){}
  var to=q&&P[q]?P[q]:(sa&&last&&P[last]?P[last]:null); if(to){ document.documentElement.className='go'; location.replace(to); } })();
@@ -56,7 +56,7 @@ h1{font-family:var(--f-display);font-size:28px;font-weight:600;line-height:1.15;
 <main>
  <div class="logo"><span class="logo-g" aria-hidden="true"><i style="background:#F0643C"></i><i style="background:#2FA36B"></i><i style="background:#F2B33D"></i><i style="background:#6E63F2"></i></span><span class="note" style="font-weight:600;color:var(--ink)">Ритм</span></div>
  <h1 id="ttl">Приложения для каждого дня</h1>
- <p class="lead" id="lead">Тренировки, бюджет, питание и цели — с общими данными. Работает без интернета, всё хранится на телефоне.</p>
+ <p class="lead" id="lead">Тренировки, бюджет, питание и цели — с общими данными. Работает без интернета, всё хранится на телефоне. Телефоны семьи можно объединить: общие покупки, дела и траты.</p>
  <section class="card acc" id="install" hidden>
   <h2>Установите на iPhone</h2>
   <ol class="steps">

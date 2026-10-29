@@ -1,0 +1,1021 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ритм">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F4F1EC">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="stylesheet" href="ritm-ios.css">
+<script>window.RITM_APP=true;window.RITM_IOS=true;window.RITM_PAGE='semya'</script>
+<script src="ritm-ios.js"></script>
+<script src="family.js"></script>
+</head>
+<body>
+<title>Ритм·Семья</title>
+<style>
+:root{
+  --bg:#F4F1EC; --card:#FFFFFF; --sunk:#EFEBE4; --line:#E6E0D6; --ink:#17161A; --muted:#5F5A52; --faint:#8C867C;
+  --accent:#E5577F; --accent-ink:#A8264F; --accent-tint:#FBE3EA; --accent-soft:#F2A7BD; --on-accent:#FFFFFF;
+  --btn:#17161A; --on-btn:#FFFFFF;
+  --dark-card:#17161A; --on-dark:#FFFFFF; --on-dark-muted:#CFCBC4; --dk-eyebrow:#F28BAA; --dk-line:#2E2C30;
+  --good:#2F7A4D; --good-tint:#E3F2E8; --on-good:#FFFFFF;
+  --warn:#8A5A0B; --warn-tint:#FCEFD2; --warn-ink:#6B4507;
+  --bad:#B42318; --bad-tint:#FDE7E4; --on-bad:#FFFFFF;
+  --shadow:rgba(23,22,26,.18);
+  --c-telo:#F0643C; --c-dengi:#2FA36B; --c-pit:#E0A22E; --c-tseli:#6E63F2;
+  --f-display:'Unbounded','Onest',system-ui,sans-serif;
+  --f-body:'Onest',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --r-lg:24px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121110; --card:#1E1C1A; --sunk:#292623; --line:#36322E; --ink:#F2EEE8; --muted:#AFA89E; --faint:#7E776E;
+  --accent:#E5577F; --accent-ink:#F28BAA; --accent-tint:#3A1A24; --accent-soft:#8A3552; --on-accent:#FFFFFF;
+  --btn:#F2EEE8; --on-btn:#17161A;
+  --dark-card:#2B2724; --on-dark:#F2EEE8; --on-dark-muted:#BDB5AA; --dk-eyebrow:#F28BAA; --dk-line:#3E3934;
+  --good:#7CCB9A; --good-tint:#1B2C21; --on-good:#0F1F15;
+  --warn:#E9B455; --warn-tint:#33280F; --warn-ink:#F2C46A;
+  --bad:#FF8A7A; --bad-tint:#3A1C18; --on-bad:#2A0F0B;
+  --shadow:rgba(0,0,0,.5); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#121110; --card:#1E1C1A; --sunk:#292623; --line:#36322E; --ink:#F2EEE8; --muted:#AFA89E; --faint:#7E776E;
+  --accent:#E5577F; --accent-ink:#F28BAA; --accent-tint:#3A1A24; --accent-soft:#8A3552; --on-accent:#FFFFFF;
+  --btn:#F2EEE8; --on-btn:#17161A;
+  --dark-card:#2B2724; --on-dark:#F2EEE8; --on-dark-muted:#BDB5AA; --dk-eyebrow:#F28BAA; --dk-line:#3E3934;
+  --good:#7CCB9A; --good-tint:#1B2C21; --on-good:#0F1F15;
+  --warn:#E9B455; --warn-tint:#33280F; --warn-ink:#F2C46A;
+  --bad:#FF8A7A; --bad-tint:#3A1C18; --on-bad:#2A0F0B;
+  --shadow:rgba(0,0,0,.5); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body.locked{overflow:hidden}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.app{max-width:480px;margin:0 auto;padding-inline:16px;padding-block:14px calc(100px + env(safe-area-inset-bottom,0px))}
+.col{display:flex;flex-direction:column;gap:14px}
+.col-s{display:flex;flex-direction:column;gap:10px}
+.col-xs{display:flex;flex-direction:column;gap:4px;min-width:0}
+.row{display:flex;align-items:center;gap:10px}
+.wrap{flex-wrap:wrap}
+.gap6{gap:6px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.top-al{align-items:flex-start}
+.grow{flex:1;min-width:0}
+.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.self-start{align-self:flex-start}
+.top{display:flex;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600}
+.tile{width:32px;height:32px;border-radius:10px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+.ibtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);display:grid;place-items:center;color:var(--ink);padding:0;flex-shrink:0}
+.h1{font-family:var(--f-display);font-weight:600;font-size:28px;line-height:1.15;margin:2px 0 0;letter-spacing:-.01em;text-wrap:balance}
+.h2{font-family:var(--f-display);font-weight:600;font-size:21px;line-height:1.25;margin:0;text-wrap:balance}
+.h3{font-size:17px;font-weight:700;margin:0}
+.sec-h{font-size:16px;font-weight:700;margin:0}
+.lede{margin:0;color:var(--muted);font-size:14px}
+.p{margin:0}
+.note{margin:0;color:var(--muted);font-size:13px}
+.lbl{font-size:13px;color:var(--muted)}
+.mut{color:var(--muted)}
+.eyebrow{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--dk-eyebrow)}
+.eyebrow-l{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-ink)}
+.card{background:var(--card);border-radius:var(--r-lg);padding:16px}
+.card.dark{background:var(--dark-card);color:var(--on-dark)}
+.dk-t{font-size:20px;font-weight:600;margin:0}
+.dk-s,.dk-note{margin:0;font-size:14px;color:var(--on-dark-muted)}
+.badge{display:inline-flex;align-items:center;min-height:24px;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.badge.good{background:var(--good-tint);color:var(--good)}
+.badge.warn{background:var(--warn-tint);color:var(--warn-ink)}
+.badge.bad{background:var(--bad-tint);color:var(--bad)}
+.badge.acc{background:var(--accent-tint);color:var(--accent-ink)}
+.badge.mut{background:var(--sunk);color:var(--muted)}
+.badge.on-dk{background:var(--dk-line);color:var(--on-dark)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 20px;border-radius:999px;border:1.5px solid transparent;font-weight:700;font-size:15px;background:none;color:var(--ink);text-align:center}
+.btn.pri{background:var(--btn);color:var(--on-btn)}
+.btn.acc{background:var(--accent);color:var(--on-accent)}
+.btn.sec{border-color:var(--ink);color:var(--ink)}
+.btn.sec-dk{border-color:var(--on-dark-muted);color:var(--on-dark)}
+.btn.ghost{color:var(--accent-ink);padding:0 10px;min-height:40px;font-weight:600}
+.btn.danger{background:var(--bad);color:var(--on-bad)}
+.danger-t{color:var(--bad)!important}
+.btn.sm{min-height:40px;padding:0 14px;font-size:14px}
+.btn.blk{width:100%}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn:active:not([disabled]){transform:scale(.98)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);font-size:14px;font-weight:600;color:var(--ink)}
+.chip[aria-pressed="true"]{border-color:var(--accent-ink);background:var(--accent-tint);color:var(--accent-ink)}
+.scroller{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;margin-inline:-16px;padding-inline:16px}
+.scroller::-webkit-scrollbar{display:none}
+.scroller .chip{flex-shrink:0}
+.ready{display:flex;gap:16px;align-items:center}
+.ring .rt{fill:none;stroke:var(--sunk);stroke-width:10}
+.ring .rv{fill:none;stroke-width:10;stroke-linecap:round;stroke-dashoffset:var(--off)}
+.ring.anim .rv{animation:ringIn 1s cubic-bezier(.2,.8,.2,1)}
+@keyframes ringIn{from{stroke-dashoffset:var(--full)}}
+.ring .rn{font-family:var(--f-display);font-size:28px;font-weight:600;fill:var(--ink)}
+.ring .rl{font-size:11px;fill:var(--muted);font-family:var(--f-body)}
+.plan-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.pi{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;padding:8px 0;border-top:1px solid var(--dk-line);align-items:baseline}
+.pi:first-child{border-top:none}
+.pi-n{font-weight:500;text-align:left;background:none;border:none;padding:0;color:inherit;min-width:0}
+.pi-v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.pi-r{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.plan-list.lt .pi{border-top-color:var(--line)}
+.lnk{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
+.wd{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--muted)}
+.wd-dot{width:32px;height:32px;border-radius:50%;background:var(--sunk);display:grid;place-items:center;color:var(--on-accent);box-sizing:border-box}
+.wd.plan .wd-dot{background:transparent;border:2px dashed var(--accent)}
+.wd.done .wd-dot{background:var(--accent);border:none}
+.wd.today .wd-l{color:var(--ink);font-weight:700}
+.wd.today .wd-dot{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--ink)}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--muted)}
+.lg{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px;box-sizing:border-box}
+.lg.done{background:var(--accent)} .lg.plan{border:2px dashed var(--accent)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.stats.s2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.stat{background:var(--sunk);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.stat-v{font-family:var(--f-display);font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.25;overflow-wrap:anywhere}
+.stat-l{font-size:12px;color:var(--muted)}
+.list{background:var(--card);border-radius:var(--r-lg);padding:2px 16px}
+.li{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;padding:10px 0;border:none;border-bottom:1px solid var(--line);background:none;text-align:left;color:var(--ink)}
+.li:last-child{border-bottom:none}
+.li-m{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.li-t{font-weight:600}
+.li-s{font-size:13px;color:var(--muted)}
+.li-e{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.li .chev{color:var(--faint);flex-shrink:0}
+.grp-h{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:8px 0 -6px}
+.stp{display:flex;flex-direction:column;gap:6px;min-width:0}
+.stp-c{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;background:var(--sunk);border-radius:16px;padding:4px}
+.stp-b{width:44px;height:44px;border-radius:12px;border:none;background:var(--card);font-size:22px;font-weight:600;color:var(--accent-ink);padding:0}
+.stp-v{width:100%;min-width:0;border:none;background:transparent;text-align:center;font-family:var(--f-display);font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;padding:0;color:var(--ink)}
+.stp-v:focus{outline:none}
+.stp-c:focus-within{box-shadow:0 0 0 2px var(--accent)}
+.sets{display:flex;flex-direction:column;gap:6px}
+@keyframes pop{0%{transform:scale(.6)}100%{transform:scale(1)}}
+@keyframes fadeUp{from{transform:translateY(-4px);opacity:.6}}
+.warn-t{color:var(--warn)}
+#sheet{position:fixed;inset:0;z-index:30;background:var(--bg)}
+.sh{display:flex;flex-direction:column;height:100%}
+.sh.enter{animation:shIn .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes shIn{from{transform:translateY(32px);opacity:.4}}
+.sh-in{max-width:480px;margin:0 auto;width:100%}
+.sh-head{padding:calc(8px + env(safe-area-inset-top,0px)) 16px 8px;border-bottom:1px solid var(--line);background:var(--bg)}
+.sh-head .sh-in{display:flex;align-items:center;gap:10px;min-height:44px}
+.sh-t{flex:1;min-width:0}
+.sh-title{font-weight:700;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-sub{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.sh-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px 16px 28px}
+.sh-foot{padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--bg)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--card);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+.tabs-in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+.tab{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:52px;justify-content:center;border:none;background:none;color:var(--muted);font-size:11px;font-weight:500;border-radius:12px;padding:0}
+.tab[aria-current="page"]{color:var(--accent-ink);font-weight:700}
+.fld{display:flex;flex-direction:column;gap:6px;min-width:0}
+.inp{width:100%;min-height:48px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);padding:0 14px;font-size:16px;color:var(--ink)}
+.inp:focus{outline:none;border-color:var(--accent)}
+.search{position:relative}
+.search svg{position:absolute;left:14px;top:14px;color:var(--muted)}
+.search .inp{padding-left:42px}
+.callout{border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:14px;align-items:flex-start}
+.callout p{margin:0}
+.callout.warn{background:var(--warn-tint);color:var(--warn-ink)}
+.callout.acc{background:var(--accent-tint);color:var(--accent-ink)}
+.callout.good{background:var(--good-tint);color:var(--good)}
+.callout.mut{background:var(--sunk);color:var(--ink)}
+.callout .btn.ghost{color:inherit;padding:0;min-height:32px;text-decoration:underline;text-underline-offset:3px}
+.confirm{background:var(--bad-tint);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
+.confirm p{margin:0;color:var(--bad);font-weight:600}
+.bar{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:4px;background:var(--accent)}
+.cues{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.chart{width:100%;height:auto;display:block;touch-action:pan-y}
+.c-grid{stroke:var(--line);stroke-width:1}
+.c-lbl{fill:var(--muted);font-size:11px;font-family:var(--f-body)}
+.c-area{fill:var(--accent-tint)}
+.c-line{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.c-dot{fill:var(--accent);stroke:var(--card);stroke-width:2}
+.c-pt{fill:var(--card);stroke:var(--accent);stroke-width:2}
+.c-guide{stroke:var(--faint);stroke-dasharray:3 3}
+.c-tip{fill:var(--ink)}
+.c-tipt{fill:var(--bg);font-size:12px;font-weight:700;font-family:var(--f-body)}
+.c-hit{fill:transparent;cursor:pointer}
+.dchip{display:inline-grid;place-items:center;min-width:36px;height:30px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600;background:var(--sunk);color:var(--muted)}
+.dchip.on{background:var(--accent-tint);color:var(--accent-ink)}
+.toast{position:fixed;left:50%;bottom:calc(156px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;width:max-content;max-width:calc(100% - 32px);background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:14px;font-size:14px;font-weight:600;box-shadow:0 8px 24px var(--shadow);animation:fadeUp .2s ease-out}
+details.card summary{font-weight:700;cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;min-height:28px}
+details.card summary::-webkit-details-marker{display:none}
+details.card[open] summary{margin-bottom:10px}
+details.card[open] summary svg{transform:rotate(90deg)}
+.tpl{display:flex;flex-direction:column;gap:6px;text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:20px;padding:14px;width:100%;color:var(--ink)}
+.tpl[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.tpl-t{font-weight:700;font-size:16px}
+.splash{display:grid;place-items:center;min-height:50vh;color:var(--muted);text-align:center}
+.seg2{display:inline-grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--card);border-radius:999px;padding:3px}
+.seg2-b{min-height:34px;padding:0 12px;border:none;border-radius:999px;background:none;font-size:13px;font-weight:600;color:var(--muted)}
+.seg2-b[aria-checked="true"]{background:var(--accent-tint);color:var(--accent-ink)}
+.ta{min-height:120px;padding:12px 14px;font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical;line-height:1.4}
+.ph{display:grid;place-items:center;text-align:center;gap:8px;padding:28px 16px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* Столбики */
+.bars{display:flex;gap:6px;align-items:stretch}
+.bc{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:4px}
+.bc-v{font-size:11px;font-weight:700;color:var(--muted);min-height:15px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bc-t{width:100%;height:110px;display:flex;align-items:flex-end;background:var(--sunk);border-radius:8px;overflow:hidden}
+.bc-t i{display:block;width:100%;background:var(--accent-soft);border-radius:8px 8px 0 0;transition:height .5s cubic-bezier(.2,.8,.2,1)}
+.bc.cur .bc-t i{background:var(--accent)} .bc.cur .bc-v,.bc.cur .bc-l{color:var(--accent-ink)}
+.bc.dim .bc-t i{background:repeating-linear-gradient(135deg,var(--accent-soft) 0 5px,var(--accent-tint) 5px 10px)}
+.bc-l{font-size:11px;min-height:15px;color:var(--muted);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}
+.bars.dense .bc-l{font-size:10px;overflow:visible;text-overflow:clip;max-width:none} .bars.dense .bc-v{font-size:10px}
+.bc-s{font-size:10px;color:var(--faint);white-space:nowrap}
+[hidden]{display:none!important}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.seg2-b[disabled]{opacity:.4}
+/* Сегмент во всю ширину */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:2px;background:var(--sunk);border-radius:999px;padding:3px}
+.seg-b{min-height:40px;padding:0 8px;border:none;border-radius:999px;background:none;font-size:14px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg-b[aria-checked="true"]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px var(--shadow)}
+.seg.on-card{background:var(--sunk)}
+/* Главная карточка-число */
+.hero{display:flex;flex-direction:column;gap:10px}
+.hero-v{font-family:var(--f-display);font-size:36px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.01em;overflow-wrap:anywhere}
+.hero-v.md{font-size:28px}
+.hero-v small{font-size:.5em;font-weight:500;color:inherit;opacity:.75;margin-left:4px}
+.card.dark .lbl,.card.dark .note{color:var(--on-dark-muted)}
+.pbar{position:relative;height:8px;border-radius:4px;background:var(--sunk);overflow:visible}
+.card.dark .pbar{background:var(--dk-line)}
+.pbar>i{display:block;height:100%;border-radius:4px;background:var(--accent);max-width:100%;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+.pbar.over>i{background:var(--bad)}
+.pbar.good>i{background:var(--good)}
+.pbar .mark{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:1px;background:var(--ink)}
+.card.dark .pbar .mark{background:var(--on-dark)}
+.row-b{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.b{font-weight:700}
+.bad-t{color:var(--bad)} .good-t{color:var(--good)} .acc-t{color:var(--accent-ink)}
+.pill{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:8px 12px;border-radius:12px;background:var(--accent-tint);color:var(--accent-ink);font-size:14px;font-weight:600}
+.card.dark .pill{background:var(--accent);color:var(--on-accent)}
+/* Плавающая кнопка */
+.fab{position:fixed;right:max(16px,calc(50% - 224px));bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:12;width:60px;height:60px;border-radius:50%;border:none;background:var(--btn);color:var(--on-btn);display:grid;place-items:center;box-shadow:0 8px 24px var(--shadow)}
+.fab:active{transform:scale(.95)}
+/* Цифровая клавиатура */
+.amt{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0 2px}
+.amt-v{font-family:var(--f-display);font-size:40px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.15;max-width:100%;overflow-wrap:anywhere;text-align:center}
+.amt-v.empty{color:var(--faint)}
+.amt-x{font-size:14px;color:var(--muted);min-height:20px}
+.kp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.kp-b{min-height:52px;border-radius:14px;border:none;background:var(--card);font-family:var(--f-display);font-size:21px;font-weight:600;color:var(--ink);padding:0;display:grid;place-items:center;font-variant-numeric:tabular-nums}
+.kp-b.op{background:var(--sunk);color:var(--accent-ink);font-family:var(--f-body);font-size:18px}
+.kp-b:active{background:var(--accent-tint)}
+/* Чип связи */
+.lchip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+.lchip i{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+/* Строка с иконкой */
+.ico{width:40px;height:40px;border-radius:12px;background:var(--accent-tint);color:var(--accent-ink);display:grid;place-items:center;flex-shrink:0}
+.ico.mut{background:var(--sunk);color:var(--muted)}
+.ico.sm{width:32px;height:32px;border-radius:10px}
+/* Чекбокс задачи */
+.chk{width:28px;height:28px;border-radius:9px;border:2px solid var(--faint);background:var(--card);display:grid;place-items:center;color:transparent;flex-shrink:0;padding:0}
+.chk.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.chk.on.pop{animation:pop .35s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(.6)}100%{transform:scale(1)}}
+.chk-hit{display:grid;place-items:center;width:44px;height:44px;margin:-8px -8px -8px -10px;background:none;border:none;padding:0;flex-shrink:0}
+.done-t{text-decoration:line-through;color:var(--muted)}
+/* Кольцо */
+.ring2{display:block;flex-shrink:0}
+.ring2 .rt{fill:none;stroke:var(--sunk)}
+.ring2 .rv{fill:none;stroke:var(--accent);stroke-linecap:round;transition:stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1)}
+.ring2 .rv.good{stroke:var(--good)}
+.ring2 text{font-family:var(--f-display);font-weight:600;fill:var(--ink)}
+/* Кольцевая диаграмма */
+.donut{display:block;margin:0 auto}
+.donut path{stroke:var(--card);stroke-width:2}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;flex-shrink:0}
+/* Пустое состояние */
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:24px 12px;color:var(--muted)}
+.empty .ico{width:56px;height:56px;border-radius:18px}
+/* Шаги онбординга */
+.dots{display:flex;gap:6px}
+.dots i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.dots i.on{background:var(--accent)}
+.top .row{gap:8px}
+.mnav{display:flex;align-items:center;gap:4px}
+.mnav .ibtn{width:40px;height:40px}
+.mnav-t{font-weight:700;min-width:110px;text-align:center}
+.inp.sm{min-height:44px;font-size:15px}
+textarea.inp{padding:12px 14px;min-height:96px;resize:vertical;line-height:1.4}
+select.inp{appearance:none;background-image:none}
+.swatch{width:12px;height:12px;border-radius:4px;display:inline-block}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;font-size:14px}
+.kv span:nth-child(even){text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.toast-u{background:none;border:none;color:inherit;font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:4px 0 4px 10px;cursor:pointer}
+.top .row .ibtn{flex-shrink:0}
+.card.dark .ring2 text{fill:var(--on-dark)} .card.dark .ring2 .rt{stroke:var(--dk-line)}
+.sh .toast{bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+body.locked .toast{top:calc(66px + env(safe-area-inset-top,0px));bottom:auto}
+.toast{pointer-events:none} .toast-u{pointer-events:auto}
+.fam{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fam-b{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 4px;border-radius:16px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font-size:13px;font-weight:600}
+.fam-i{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:#17161A}
+.app{padding-bottom:calc(170px + env(safe-area-inset-bottom,0px))}
+
+/* Ритм·Семья */
+.avs{display:flex;flex-wrap:wrap;gap:8px}
+.av{display:inline-flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:999px;background:var(--dk-line);color:var(--on-dark);font-weight:600;font-size:14px}
+.av b,.avb{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:#17161A;flex-shrink:0}
+.avb.lg{width:44px;height:44px;font-size:17px}
+.sync-l{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--on-dark-muted)}
+.spin svg{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tlist{background:var(--card);border-radius:var(--r-lg);padding:4px 12px}
+.trow{display:flex;align-items:center;gap:6px;min-height:56px;border-bottom:1px solid var(--line)}
+.trow:last-child{border-bottom:none}
+.trow .chk-hit{margin:0}
+.tmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;background:none;border:none;padding:8px 0;text-align:left;color:var(--ink);font:inherit}
+.tt{font-weight:600;overflow-wrap:anywhere}
+.trow.is-done .tt{font-weight:500;color:var(--muted);text-decoration:line-through}
+.tmeta{display:flex;flex-wrap:wrap;align-items:center;gap:2px 8px;font-size:12px;color:var(--muted)}
+.addrow{display:flex;gap:8px;align-items:center}
+.addrow .inp{flex:1}
+.shrow{display:flex;align-items:center;gap:8px;min-height:48px;border-bottom:1px solid var(--line)}
+.shrow:last-child{border-bottom:none}
+.shrow .grow{min-width:0;display:flex;flex-direction:column}
+.done-t{color:var(--muted);text-decoration:line-through}
+.ibtn.ghostb{border:none;background:none;color:var(--faint)}
+.week{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px 12px}
+.wk{display:grid;grid-template-columns:repeat(7,18px);gap:4px}
+.wk i{width:18px;height:18px;border-radius:6px;background:var(--sunk);display:block}
+.wk i.on{background:var(--mc)}
+.wk i.today{box-shadow:inset 0 0 0 2px var(--ink)}
+.wk-h{display:grid;grid-template-columns:repeat(7,18px);gap:4px;font-size:10px;color:var(--faint);text-align:center}
+.mrow{display:flex;align-items:center;gap:12px;min-height:56px;border-bottom:1px solid var(--line)}
+.mrow:last-child{border-bottom:none}
+.mbar{height:8px;border-radius:4px;background:var(--sunk);overflow:hidden}
+.mbar i{display:block;height:100%;border-radius:4px}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;word-break:break-all;background:var(--sunk);border-radius:12px;padding:10px 12px;max-height:84px;overflow:hidden}
+.steps-n{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.steps-n code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;background:var(--sunk);padding:1px 6px;border-radius:6px}
+.colors{display:flex;gap:10px;flex-wrap:wrap}
+.cdot{width:40px;height:40px;border-radius:50%;border:3px solid transparent;padding:0;cursor:pointer}
+.cdot[aria-pressed="true"]{border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--bg)}
+.intro-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.intro-g div{background:var(--card);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:4px}
+.intro-g b{font-size:14px}
+.intro-g span{font-size:13px;color:var(--muted)}
+.ok-t{color:var(--good)}
+.inp.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}
+.mbar2{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--sunk)}
+.mbar2 i{display:block;height:100%}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+.mrow.li{gap:12px}
+.grow-in{display:flex;gap:8px;align-items:center}
+.grow-in .inp{flex:1}
+.role{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent-ink);background:var(--accent-tint);border-radius:999px;padding:2px 8px}
+.week .col-xs{align-items:flex-start}
+
+</style>
+
+<main id="view" class="app"></main>
+<nav class="tabs" aria-label="Разделы">
+  <div class="tabs-in">
+    <button class="tab" data-a="tab" data-t="today"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg><span>Сегодня</span></button>
+    <button class="tab" data-a="tab" data-t="shop"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12zM6 6L5 3H2M9 20h.01M18 20h.01"/></svg><span>Покупки</span></button>
+    <button class="tab" data-a="tab" data-t="money"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h12v4M4 7v11a2 2 0 0 0 2 2h14V9H6a2 2 0 0 1-2-2zM16 14.5h.01"/></svg><span>Деньги</span></button>
+    <button class="tab" data-a="tab" data-t="fam"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1M16 3.13a4 4 0 0 1 0 7.75M22 21v-1a6 6 0 0 0-4-5.65"/></svg><span>Семья</span></button>
+  </div>
+</nav>
+<div id="sheet" hidden></div>
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script>
+'use strict';
+/* ============ Ритм · общее ядро ============
+   Утилиты, иконки, хранение (облако Claude или телефон), листы, история «Назад», резервная копия,
+   связи между приложениями семейства. Конфигурация приложения — объект APP, задаётся до ядра. */
+
+/* ---------- Справочники и утилиты ---------- */
+const WD=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const WD_FULL=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота','Воскресенье'];
+const WD_ACC=['понедельник','вторник','среду','четверг','пятницу','субботу','воскресенье'];
+const MON_G=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MON_S=['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const MON_SN=['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+const MON_N=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+const clone=o=>JSON.parse(JSON.stringify(o));
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const r1=v=>Math.round(v*10)/10;
+const r2=v=>Math.round(v*100)/100;
+const sum=(a,f)=>a.reduce((s,x)=>s+(f?f(x):x),0);
+function fmt(v,d=1){ if(v==null||!isFinite(v)) return '—'; const neg=v<0; v=Math.abs(v); let s=(Math.round(v*Math.pow(10,d))/Math.pow(10,d)).toFixed(d); if(s.indexOf('.')>=0) s=s.replace(/0+$/,'').replace(/\.$/,''); let [i,f]=s.split('.'); i=i.replace(/\B(?=(\d{3})+(?!\d))/g,'\u00a0'); return (neg?'−':'')+i+(f?','+f:''); }
+function fmtIn(v){ if(v==null||!isFinite(v)) return ''; return String(r2(v)).replace('.',','); }
+function parseNum(s){ const v=parseFloat(String(s).replace(',','.').replace(/[\s ]/g,'')); return isFinite(v)?v:null; }
+function dkey(d=new Date()){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function pkey(k){ const [y,m,d]=k.split('-').map(Number); return new Date(y,m-1,d||1,12); }
+function mkey(k){ return k.slice(0,7); }
+function dBetween(a,b){ return Math.round((pkey(b)-pkey(a))/864e5); }
+function addDays(k,n){ const d=pkey(k); d.setDate(d.getDate()+n); return dkey(d); }
+function addMonths(k,n){ const d=pkey(k); const day=d.getDate(); d.setDate(1); d.setMonth(d.getMonth()+n); const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); d.setDate(Math.min(day,last)); return dkey(d); }
+function daysInMonth(k){ const d=pkey(k); return new Date(d.getFullYear(),d.getMonth()+1,0).getDate(); }
+function wdi(k){ return (pkey(k).getDay()+6)%7; }
+function weekStart(k){ return addDays(k,-wdi(k)); }
+function fmtDay(k){ const d=pkey(k); return d.getDate()+' '+MON_S[d.getMonth()]; }
+function fmtDayG(k){ const d=pkey(k); return d.getDate()+' '+MON_G[d.getMonth()]; }
+function fmtLong(k){ const d=pkey(k); return WD_FULL[wdi(k)]+', '+d.getDate()+' '+MON_G[d.getMonth()]; }
+function fmtMonth(m){ const [y,mm]=m.split('-').map(Number); const t=MON_N[mm-1]; return y===new Date().getFullYear()?t:t+' '+y; }
+function relDay(k){ const t=dkey(); const n=dBetween(t,k); if(n===0) return 'Сегодня'; if(n===1) return 'Завтра'; if(n===-1) return 'Вчера'; if(n===2) return 'Послезавтра'; return (n>-7&&n<7?WD[wdi(k)]+', ':'')+fmtDay(k); }
+function plural(n,f){ n=Math.abs(Math.round(n))%100; const n1=n%10; if(n>10&&n<20) return f[2]; if(n1>1&&n1<5) return f[1]; if(n1===1) return f[0]; return f[2]; }
+function pl(n,f){ return fmt(n,0)+' '+plural(n,f); }
+const DAYS=['день','дня','дней'];
+
+/* ---------- Иконки (контур, линия 2, сетка 24) ---------- */
+const IC={
+ back:'<path d="M15 5l-7 7 7 7"/>',down:'<path d="M5 9l7 7 7-7"/>',close:'<path d="M6 6l12 12M18 6L6 18"/>',plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',
+ check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',right:'<path d="M9 5l7 7-7 7"/>',left:'<path d="M15 5l-7 7 7 7"/>',search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/>',gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
+ trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',edit:'<path d="M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4"/>',
+ cal:'<rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/>',clock:'<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>',
+ chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',list:'<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
+ star:'<path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/>',
+ swap:'<path d="M7 4L3 8l4 4M3 8h14M17 20l4-4-4-4M21 16H7"/>',repeat:'<path d="M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4M21 13v2a3 3 0 0 1-3 3H3"/>',
+ bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 21h4"/>',info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/>',
+ warn:'<path d="M12 3l10 18H2zM12 10v5M12 18v.01"/>',flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',target:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+ copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/>',
+ up:'<path d="M12 19V5M6 11l6-6 6 6"/>',dn:'<path d="M12 5v14M6 13l6 6 6-6"/>',dots:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+ bksp:'<path d="M9 5h11v14H9l-6-7zM12 9.5l5 5M17 9.5l-5 5"/>',sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ // семейство
+ pulse:'<path d="M3 12h4l2-5 4 10 2-5h6"/>',wallet:'<path d="M4 7a2 2 0 0 1 2-2h12v4M4 7v11a2 2 0 0 0 2 2h14V9H6a2 2 0 0 1-2-2zM16 14.5h.01"/>',
+ apple:'<path d="M12 7c-1.5-1.3-4-1.5-5.5 0C4.4 9 5 14 7 17.5c1.2 2 2.8 3 5 2 2.2 1 3.8 0 5-2 2-3.5 2.6-8.5.5-10.5-1.5-1.5-4-1.3-5.5 0zM12 7c0-2 1-3.5 3-4"/>',
+ goal:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l7-7M16 5h3v3"/>',
+ lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+ users:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1M16 3.13a4 4 0 0 1 0 7.75M22 21v-1a6 6 0 0 0-4-5.65"/>'
+};
+/* Семья (family.js в Android и iPhone): общие задачи, траты, покупки */
+function famOn(){ try{ return typeof Fam!=='undefined'&&Fam.on(); }catch(e){ return false; } }
+function famTag(id){ return famOn()&&id?' '+Fam.tag(id):''; }
+/* «Личное» или одна из семей: одна семья — переключатель «Для семьи», несколько — выбор */
+function famOf(x){ return famOn()?Fam.scopeOf(x):null; }
+function famChip(act,cur,extra=''){ if(!famOn()) return ''; const L=Fam.list(); const sc=famOf({fam:cur});
+ if(L.length===1) return `<button class="chip ichip" data-a="${act}" data-v="${sc?'':L[0].id}" ${extra} aria-pressed="${!!sc}">${ic('users',16)} Для семьи</button>`;
+ return `<button class="chip" data-a="${act}" data-v="" ${extra} aria-pressed="${!sc}">Личное</button>`+L.map(f=>`<button class="chip ichip" data-a="${act}" data-v="${f.id}" ${extra} aria-pressed="${sc===f.id}">${ic('users',16)} ${esc(f.name)}</button>`).join(''); }
+function famLabel(x){ const fid=famOf(x); return fid?(Fam.list().length>1?Fam.famName(fid):'семья'):''; }
+/* фильтр «Все · Личные · Семейные» */
+function scopeChips(act,cur){ if(!famOn()) return ''; const L=Fam.list(); const items=[['all','Все'],['me','Личные'],...(L.length>1?L.map(f=>[f.id,f.name]):[['fam','Семейные']])];
+ return items.map(([v,l])=>`<button class="chip" data-a="${act}" data-v="${esc(v)}" aria-pressed="${(cur||'all')===v}">${esc(l)}</button>`).join(''); }
+function inScope(x,sc){ if(!sc||sc==='all'||!famOn()) return true; const f=famOf(x); if(sc==='me') return !f; if(sc==='fam') return !!f; return f===sc; }
+function ic(n,s=20){ return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||IC.dots}</svg>`; }
+
+/* ---------- Семейство: цвета и данные других приложений ---------- */
+const FAMILY={telo:{n:'Тело',c:'var(--c-telo)',ic:'pulse'},dengi:{n:'Деньги',c:'var(--c-dengi)',ic:'wallet'},pit:{n:'Питание',c:'var(--c-pit)',ic:'apple'},tseli:{n:'Цели',c:'var(--c-tseli)',ic:'goal'}};
+function lchip(app){ const f=FAMILY[app]; return `<span class="lchip"><i style="background:${f.c}"></i>из Ритм·${f.n}</span>`; }
+function lsGet(k){ try{ const v=localStorage.getItem(k); return v?JSON.parse(v):null; }catch(e){ return null; } }
+const LSRAW={};
+function lsSet(k,v){ try{ const t=JSON.stringify(v); localStorage.setItem(k,t); LSRAW[k]=t; return true; }catch(e){ return false; } }
+function lsRaw(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+/* Данные соседей видны, когда приложения работают вместе (Android-семейство: общее хранилище). */
+const Family={
+ _c:{},
+ read(app){ if(app===APP.id) return null; const now=Date.now(); const c=this._c[app]; if(c&&now-c.t<1500) return c.v; let v=null;
+  if(app==='telo'){ const s=lsGet('ritm-telo-state-v1'), w=lsGet('ritm-telo-workouts-v1'); if(s&&s.profile&&s.profile.done) v={state:s,workouts:Array.isArray(w)?w:[]}; }
+  else { const s=lsGet('ritm-'+app+'-state-v1'), b=lsGet('ritm-'+app+'-b-v1'); if(s&&s.setup) v={state:s,b:b||{}}; }
+  this._c[app]={t:now,v}; return v; },
+ has(app){ return !!this.read(app); },
+ open(app){ try{ if(window.RitmNative&&window.RitmNative.open){ window.RitmNative.open(app); return true; } }catch(e){} return false; },
+ canOpen(){ try{ return !!(window.RitmNative&&window.RitmNative.open); }catch(e){ return false; } }
+};
+
+/* ---------- Телефон: уведомления, отправка ---------- */
+const Native={
+ ok(){ try{ return !!(window.RitmNative&&window.RitmNative.notifyAt); }catch(e){ return false; } },
+ can(){ try{ return !!window.RitmNative.canNotify(); }catch(e){ return false; } },
+ ask(){ try{ window.RitmNative.askNotify(); }catch(e){} },
+ share(text,title){ try{ return !!(window.RitmNative&&window.RitmNative.share&&window.RitmNative.share(text,title)); }catch(e){ return false; } },
+ canShare(){ try{ return !!(window.RitmNative&&window.RitmNative.share); }catch(e){ return false; } },
+ list(prefix){ try{ const s=window.RitmNative.listNotify(prefix)||''; return s?s.split('\n'):[]; }catch(e){ return []; } },
+ at(id,when,title,text){ try{ return !!window.RitmNative.notifyAt(id,when,title,text,APP.id); }catch(e){ return false; } },
+ cancel(id){ try{ window.RitmNative.cancelNotify(id); }catch(e){} }
+};
+function atTime(k,hm){ const [h,m]=(hm||'09:00').split(':').map(Number); const d=pkey(k); d.setHours(h||0,m||0,0,0); return d.getTime(); }
+/* Напоминания: APP.reminders() отдаёт [{id,at,title,text}] на ближайшие дни; ядро ставит новые и снимает лишние */
+let remT=null;
+function syncReminders(){ clearTimeout(remT); remT=setTimeout(()=>{ if(!Native.ok()||!S||!S.setup) return; const pre=APP.id+':'; let want=[];
+  try{ if(S.remind&&S.remind.on!==false&&APP.reminders) want=APP.reminders().filter(r=>r&&r.at>Date.now()+30000&&r.at<Date.now()+15*864e5).slice(0,60); }catch(e){ want=[]; }
+  const ids=new Set(want.map(r=>pre+r.id)); for(const id of Native.list(pre)) if(!ids.has(id)) Native.cancel(id);
+  for(const r of want) Native.at(pre+r.id,r.at,r.title,r.text); },1200); }
+function remindPrompt(){ if(!Native.ok()||Native.can()||!S.remind||S.remind.on===false||S.remind.later) return '';
+ return `<div class="callout acc"><p class="b">${ic('bell',16)} Включить напоминания?</p><p>${APP.remindWhy||'Ритм напомнит о важном уведомлением.'}</p><div class="row wrap gap6"><button class="btn pri sm" data-a="remAsk">Разрешить</button><button class="btn ghost sm" data-a="remLater" style="color:inherit">Не сейчас</button></div></div>`; }
+function remindCard(inner=''){ const R=S.remind||{};
+ if(!Native.ok()) return `<section class="card col-s"><h2 class="sec-h">Напоминания</h2><p class="p">${APP.remindWhy||''} ${window.RITM_IOS?'На iPhone веб-приложение не может присылать уведомления по расписанию — это ограничение Apple. Напоминания работают в Android-версии Ритма.':'Уведомления работают в Android-версии Ритма.'}</p></section>`;
+ const can=Native.can();
+ return `<section class="card col-s"><div class="between"><h2 class="sec-h">Напоминания</h2><button class="chip" data-a="remOn" aria-pressed="${R.on!==false}">${R.on!==false?'Включены':'Выключены'}</button></div>${R.on!==false&&!can?`<div class="callout warn"><p>Телефон не разрешает уведомления Ритма.</p><button class="btn ghost" data-a="remAsk">Разрешить</button></div>`:''}${R.on!==false?inner:''}</section>`; }
+function timeChips(act,cur,list=['08:00','09:00','10:00','12:00','18:00','20:00','21:00']){ return `<div class="chips">${list.map(t=>`<button class="chip" data-a="${act}" data-v="${t}" aria-pressed="${cur===t}">${t}</button>`).join('')}</div>`; }
+
+/* ---------- Хранение ----------
+   S — состояние приложения (один документ), B — «корзины» по месяцам ('2026-10' → {...}).
+   В Claude: data/users/<id>/<app> и подколлекция b/<месяц>. Вне Claude и в Android — localStorage. */
+let S=null, B={};
+const LS_S=()=>'ritm-'+APP.id+'-state-v1', LS_B=()=>'ritm-'+APP.id+'-b-v1';
+async function retry(fn){ try{ return await fn(); }catch(e){ if(e&&(e.code==='unavailable'||e.code==='rate_limited')){ await new Promise(r=>setTimeout(r,500+Math.random()*700)); return await fn(); } throw e; } }
+function errText(e){ const c=e&&e.code; if(c==='quota_exceeded') return 'Облако заполнено — удалите старые данные или сделайте резервную копию'; if(c==='revoked'||c==='not_granted') return 'Нет доступа к облаку — изменения сохранены на этом устройстве'; return 'Не удалось сохранить в облако — изменения есть на этом устройстве'; }
+const Store={
+ mode:'local',ref:null,col:null,timer:null,dirty:new Set(),
+ loadLocal(){ const s=lsGet(LS_S()); S=APP.normalize(s||null); const b=lsGet(LS_B()); B=b&&typeof b==='object'?b:{}; LSRAW[LS_S()]=lsRaw(LS_S()); LSRAW[LS_B()]=lsRaw(LS_B()); if(APP.onData) APP.onData(); },
+ /* Другое приложение семейства (или восстановление копии) могло изменить наши данные — перечитать */
+ changedOutside(){ return this.mode!=='db'&&(lsRaw(LS_S())!==LSRAW[LS_S()]||lsRaw(LS_B())!==LSRAW[LS_B()]); },
+ async init(){
+  let db=null,user=null;
+  try{ if(window.claude&&typeof window.claude.use==='function'){ [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]); } }catch(e){}
+  let id=null; try{ id=user?await user.id():null; }catch(e){}
+  if(!db||!id) return;
+  try{
+   this.ref=db.doc('data/users/'+id+'/'+APP.id); this.col=this.ref.collection('b');
+   const s=await retry(()=>this.ref.get()); const bs=await retry(()=>this.col.limit(1000).get());
+   this.mode='db';
+   if(s.exists){ S=APP.normalize(clone(s.data())); B={}; bs.docs.forEach(d=>{ B[d.id]=clone(d.data()); }); }
+   else if(S.setup){ await this.ref.set(clone(S)); for(const k of Object.keys(B)) await this.col.doc(k).set(clone(B[k])); }
+   lsSet(LS_S(),S); lsSet(LS_B(),B); if(APP.onData) APP.onData();
+  }catch(e){ this.mode='local'; toast('Облако недоступно — данные сохраняются на этом устройстве'); }
+ },
+ save(){ if(!lsSet(LS_S(),S)) toast('Мало места на устройстве — сделайте резервную копию'); this.later(); syncReminders(); },
+ touch(k){ this.dirty.add(k); lsSet(LS_B(),B); this.later(); syncReminders(); },
+ later(){ clearTimeout(this.timer); this.timer=setTimeout(()=>this.flush(),700); },
+ async flush(){ clearTimeout(this.timer); this.timer=null; lsSet(LS_S(),S); lsSet(LS_B(),B); if(this.mode!=='db') { this.dirty.clear(); return; }
+  const ks=[...this.dirty]; this.dirty.clear();
+  try{ await retry(()=>this.ref.set(clone(S))); for(const k of ks){ if(B[k]) await retry(()=>this.col.doc(k).set(clone(B[k]))); else await retry(()=>this.col.doc(k).delete()); } }catch(e){ ks.forEach(k=>this.dirty.add(k)); toast(errText(e)); } },
+ async importAll(st,b){ const old=Object.keys(B); S=APP.normalize(st); B=b&&typeof b==='object'?b:{}; lsSet(LS_S(),S); lsSet(LS_B(),B); if(APP.onData) APP.onData();
+  if(this.mode==='db'){ try{ await retry(()=>this.ref.set(clone(S))); for(const k of old) if(!B[k]) await this.col.doc(k).delete(); for(const k of Object.keys(B)) await this.col.doc(k).set(clone(B[k])); }catch(e){ toast(errText(e)); } } },
+ async reset(){ const old=Object.keys(B); S=APP.normalize(null); B={}; lsSet(LS_S(),S); lsSet(LS_B(),B); if(APP.onData) APP.onData(); if(this.mode==='db'){ try{ await this.ref.set(clone(S)); for(const k of old) await this.col.doc(k).delete(); }catch(e){ toast(errText(e)); } } }
+};
+function bucket(k,make){ if(!B[k]&&make) B[k]=make(); return B[k]||null; }
+function storageText(){ if(Store.mode==='db') return 'Сохраняются в вашем аккаунте Claude и видны только вам.'; if(typeof window!=='undefined'&&window.RITM_IOS) return 'Хранятся только на этом iPhone, внутри значка «Ритм». Если удалить значок с экрана «Домой», данные сотрутся — делайте копию всего Ритма и сохраняйте её в Заметки или Файлы.'; if(typeof window!=='undefined'&&window.RITM_APP) return 'Хранятся только на этом телефоне. Делайте резервную копию перед сменой телефона или удалением приложения.'; return 'Сохраняются только в этом браузере. Откройте приложение в Claude, чтобы данные хранились в аккаунте.'; }
+
+/* ---------- Интерфейс: состояние, листы, рендер ---------- */
+const ui={tab:null,stack:[],confirm:null,booting:true,lastDepth:0,lastTop:'',backup:null,bkText:'',bkData:null,kp:null};
+const VIEWS={}, SH={}, A={}, C={}, I={};
+function topSheet(){ return ui.stack[ui.stack.length-1]; }
+function topKey(t){ return t?[t.type,t.id||'',t.m||'',t.x!=null?t.x:''].join('|'):''; }
+function sheet({title,sub='',left='back',right='',body,foot=''}){
+ const lb=left==='back'?`<button class="ibtn" data-a="back" aria-label="Назад">${ic('back',20)}</button>`:left==='close'?`<button class="ibtn" data-a="back" aria-label="Закрыть">${ic('close',20)}</button>`:'';
+ return `<div class="sh" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="sh-head"><div class="sh-in">${lb}<div class="sh-t"><div class="sh-title">${esc(title)}</div>${sub?`<div class="sh-sub">${sub}</div>`:''}</div>${right}</div></div><div class="sh-body"><div class="sh-in col">${body}</div></div>${foot?`<div class="sh-foot"><div class="sh-in col-s">${foot}</div></div>`:''}</div>`; }
+function topBar(extra=''){ return `<header class="top"><div class="brand"><span class="tile">${ic(APP.icon,18)}</span><span>Ритм·${APP.name}</span></div><div class="row">${extra}<button class="ibtn" data-a="push" data-s="settings" aria-label="Настройки">${ic('gear',20)}</button></div></header>`; }
+let HIST=typeof window!=='undefined'&&window.RITM_APP===true;
+let histDepth=0,histIgnore=0;
+function syncHistory(){ if(!HIST) return; try{ const want=ui.stack.length; if(want>histDepth){ while(histDepth<want){ histDepth++; history.pushState({d:histDepth},''); } } else if(want<histDepth){ const n=histDepth-want; histDepth=want; histIgnore++; history.go(-n); } }catch(e){ HIST=false; } }
+function onPop(){ if(histIgnore>0){ histIgnore--; return; } histDepth=Math.max(0,histDepth-1); const t=topSheet(); if(!t) return; if(t.type==='onboard'){ histDepth++; history.pushState({d:histDepth},''); return; } A.back(); }
+function render(){ renderInner(); syncHistory(); }
+function renderInner(){
+ const view=document.getElementById('view');
+ const sy=window.scrollY;
+ view.innerHTML=ui.booting?`<div class="splash"><p class="p">Загружаю…</p></div>`:(VIEWS[ui.tab]||VIEWS[APP.tabs[0]])();
+ document.querySelectorAll('.tab').forEach(t=>{ if(t.dataset.t===ui.tab) t.setAttribute('aria-current','page'); else t.removeAttribute('aria-current'); });
+ const fab=document.getElementById('fab'); if(fab) fab.hidden=ui.booting||!(APP.fab&&APP.fab(ui.tab));
+ const host=document.getElementById('sheet'); const top=topSheet();
+ if(!top){ host.hidden=true; host.innerHTML=''; document.body.classList.remove('locked'); ui.lastDepth=0; ui.lastTop=''; if(Math.abs(window.scrollY-sy)>2) window.scrollTo(0,sy); return; }
+ const key=topKey(top); const same=key===ui.lastTop; const old=host.querySelector('.sh-body'); const sc=same&&old?old.scrollTop:0;
+ const ae=document.activeElement; const focusId=same&&ae&&ae.id&&host.contains(ae)?ae.id:null; const selS=focusId&&ae.selectionStart!=null?[ae.selectionStart,ae.selectionEnd]:null;
+ host.innerHTML=(SH[top.type]||(()=>sheet({title:'',body:''})))(top); host.hidden=false; document.body.classList.add('locked');
+ if(!same&&ui.stack.length>=ui.lastDepth) host.firstElementChild.classList.add('enter');
+ const nb=host.querySelector('.sh-body'); if(nb) nb.scrollTop=sc;
+ if(focusId){ const el=document.getElementById(focusId); if(el){ el.focus({preventScroll:true}); if(selS&&el.setSelectionRange) try{ el.setSelectionRange(selS[0],selS[1]); }catch(e){} } }
+ ui.lastDepth=ui.stack.length; ui.lastTop=key;
+}
+function commit(){ Store.save(); render(); syncReminders(); }
+let toastT=null;
+function toast(msg,undo){ const t=document.getElementById('toast'); if(!t) return; t.innerHTML=esc(msg)+(undo?` <button class="toast-u" data-a="undo">Отменить</button>`:''); ui.undo=undo||null; t.hidden=false; t.style.animation='none'; void t.offsetWidth; t.style.animation=''; clearTimeout(toastT); toastT=setTimeout(()=>{ t.hidden=true; ui.undo=null; },undo?5000:2800); }
+function vibrate(p){ try{ if(navigator.vibrate) navigator.vibrate(p); }catch(e){} }
+function applyTheme(){ try{ const t=S&&S.theme; if(t==='light'||t==='dark') document.documentElement.dataset.theme=t; else delete document.documentElement.dataset.theme; }catch(e){} }
+
+/* ---------- Компоненты ---------- */
+function stepper(label,val,k,x='',dec=false,unit=''){ const id='i-'+k+'-'+String(x).replace(/[^a-z0-9]/gi,'-');
+ return `<div class="stp"><label class="lbl" for="${id}">${label}</label><div class="stp-c"><button class="stp-b" data-a="st" data-k="${k}" data-x="${x}" data-v="-1" aria-label="Меньше: ${esc(label)}">−</button><input class="stp-v" id="${id}" type="text" inputmode="${dec?'decimal':'numeric'}" value="${fmtIn(val)}${unit}" data-c="sv" data-k="${k}" data-x="${x}"><button class="stp-b" data-a="st" data-k="${k}" data-x="${x}" data-v="1" aria-label="Больше: ${esc(label)}">+</button></div></div>`; }
+function chips(items,act,cur,extra=''){ return `<div class="chips">${items.map(([v,l])=>`<button class="chip" data-a="${act}" data-v="${esc(v)}" ${extra} aria-pressed="${Array.isArray(cur)?cur.includes(v):String(cur)===String(v)}">${l}</button>`).join('')}</div>`; }
+function seg(items,act,cur,label='',extra=''){ return `<div class="seg" role="radiogroup"${label?` aria-label="${esc(label)}"`:''}>${items.map(([v,l])=>`<button class="seg-b" role="radio" data-a="${act}" data-v="${esc(v)}" ${extra} aria-checked="${String(cur)===String(v)}">${l}</button>`).join('')}</div>`; }
+function pbar(frac,cls='',mark=null){ const w=clamp(frac||0,0,1)*100; return `<div class="pbar ${cls}"><i style="width:${w.toFixed(1)}%"></i>${mark!=null?`<span class="mark" style="left:calc(${(clamp(mark,0,1)*100).toFixed(1)}% - 1px)"></span>`:''}</div>`; }
+function ring(frac,size=56,stroke=7,label='',cls=''){ const r=(size-stroke)/2, C=2*Math.PI*r, off=C*(1-clamp(frac||0,0,1));
+ return `<svg class="ring2" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" aria-hidden="true"><circle cx="${size/2}" cy="${size/2}" r="${r}" class="rt" stroke-width="${stroke}"/><circle cx="${size/2}" cy="${size/2}" r="${r}" class="rv ${cls}" stroke-width="${stroke}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 ${size/2} ${size/2})"/>${label?`<text x="50%" y="50%" text-anchor="middle" dominant-baseline="central" font-size="${Math.round(size*.24)}">${label}</text>`:''}</svg>`; }
+function confirmBox(text,yesAct,yesLabel='Удалить',extra=''){ return `<div class="confirm"><p>${text}</p><div class="split"><button class="btn danger" data-a="${yesAct}" ${extra}>${yesLabel}</button><button class="btn sec" data-a="cancelConfirm">Отмена</button></div></div>`; }
+function empty(icn,text,btn=''){ return `<div class="empty"><span class="ico">${ic(icn,28)}</span><p class="p">${text}</p>${btn}</div>`; }
+function barCols(cols){ const max=Math.max(1,...cols.map(c=>c.v||0));
+ return `<div class="bars${cols.length>6?' dense':''}" role="img" aria-label="${esc(cols.map(c=>(c.title||c.label)+': '+(c.top||'0')).join(', '))}">${cols.map(c=>`<div class="bc${c.cur?' cur':''}${c.dim?' dim':''}" title="${esc((c.title||c.label)+': '+(c.top||'0'))}"><span class="bc-v">${esc(c.top||'')}</span><span class="bc-t"><i style="height:${Math.max(c.v?3:0,Math.round((c.v||0)/max*100))}%${c.color?';background:'+c.color:''}"></i></span><span class="bc-l">${esc(c.label)}</span>${c.sub?`<span class="bc-s">${esc(c.sub)}</span>`:''}</div>`).join('')}</div>`; }
+function niceStep(raw){ const p=Math.pow(10,Math.floor(Math.log10(raw||1))); const n=raw/p; return (n<=1?1:n<=2?2:n<=2.5?2.5:n<=5?5:10)*p; }
+function lineChart(pts,unit,fmtV=v=>fmt(v)){ if(pts.length<2||pts.every(p=>p.t===pts[0].t)) return '';
+ const Wd=340,Ht=170,L=46,R=12,T=16,Bm=24; const xs=pts.map(p=>pkey(p.t).getTime()); const x0=Math.min(...xs),x1=Math.max(...xs);
+ let lo=Math.min(...pts.map(p=>p.v)),hi=Math.max(...pts.map(p=>p.v)); if(hi===lo){ lo-=1; hi+=1; } const step=niceStep((hi-lo)/3); lo=Math.floor(lo/step)*step; hi=Math.ceil(hi/step)*step;
+ const X=t=>x1===x0?L+(Wd-L-R)/2:L+(t-x0)/(x1-x0)*(Wd-L-R); const Y=v=>T+(hi-v)/(hi-lo)*(Ht-T-Bm);
+ let g=''; for(let v=lo;v<=hi+1e-9;v+=step){ const y=Y(v).toFixed(1); g+=`<line class="c-grid" x1="${L}" x2="${Wd-R}" y1="${y}" y2="${y}"/><text class="c-lbl" x="${L-8}" y="${(+y+4).toFixed(1)}" text-anchor="end">${fmtV(v)}</text>`; }
+ const P=pts.map((p,i)=>[X(xs[i]),Y(p.v)]); const line=P.map((q,i)=>(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ');
+ const base=Y(lo); const area=line+` L${P[P.length-1][0].toFixed(1)} ${base.toFixed(1)} L${P[0][0].toFixed(1)} ${base.toFixed(1)} Z`;
+ const last=P[P.length-1];
+ return `<svg class="chart" viewBox="0 0 ${Wd} ${Ht}" role="img" aria-label="График: от ${fmtV(pts[0].v)} до ${fmtV(pts[pts.length-1].v)} ${unit}">${g}<path class="c-area" d="${area}"/><path class="c-line" d="${line}"/><circle class="c-dot" cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="5"/><text class="c-lbl" x="${L}" y="${Ht-4}">${fmtDay(pts[0].t)}</text><text class="c-lbl" x="${Wd-R}" y="${Ht-4}" text-anchor="end">${fmtDay(pts[pts.length-1].t)}</text></svg>`; }
+function donut(parts,size=180,hole=.62){ const tot=sum(parts,p=>p.v); if(!tot) return ''; const R=size/2, r=R*hole; let a=-Math.PI/2; let d='';
+ for(const p of parts){ const ang=p.v/tot*Math.PI*2; if(ang<=0) continue; const a2=a+Math.min(ang,Math.PI*2-1e-4); const big=a2-a>Math.PI?1:0;
+  const P=(rr,aa)=>[(R+rr*Math.cos(aa)).toFixed(2),(R+rr*Math.sin(aa)).toFixed(2)];
+  const [x1,y1]=P(R,a),[x2,y2]=P(R,a2),[x3,y3]=P(r,a2),[x4,y4]=P(r,a);
+  d+=`<path d="M${x1} ${y1}A${R} ${R} 0 ${big} 1 ${x2} ${y2}L${x3} ${y3}A${r} ${r} 0 ${big} 0 ${x4} ${y4}Z" style="fill:${p.c}"><title>${esc(p.n)}</title></path>`; a=a2; }
+ return `<svg class="donut" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="${esc(parts.map(p=>p.n+' '+Math.round(p.v/tot*100)+'%').join(', '))}">${d}</svg>`; }
+const PALETTE=['#2FA36B','#6E63F2','#F0643C','#E0A22E','#2B8CC4','#C2417A','#7A8C2E','#8C5A3C','#3FA7A0','#9B6ADB','#D9534F','#5F6B7A','#B08D57','#4C9F38'];
+
+/* ---------- Цифровая клавиатура (сумма, граммы) ----------
+   ui.kp={v:'1250', ops:true}  Поддерживает сложение: «200+350». */
+function kpValue(s){ if(!s) return 0; let t=0; for(const p of String(s).split('+')){ const v=parseNum(p); if(v!=null) t+=v; } return r2(t); }
+function keypad(opts={}){ const dec=opts.dec!==false; return `<div class="kp">${['1','2','3','bk','4','5','6','+','7','8','9','ok',dec?',':'00','0','000',''].map(k=>{
+  if(k==='bk') return `<button class="kp-b op" data-a="kp" data-v="bk" aria-label="Стереть">${ic('bksp',22)}</button>`;
+  if(k==='+') return opts.plus===false?'<span></span>':`<button class="kp-b op" data-a="kp" data-v="+" aria-label="Прибавить">+</button>`;
+  if(k==='ok') return `<button class="kp-b op" data-a="kp" data-v="c" aria-label="Очистить">C</button>`;
+  if(k==='') return '<span></span>';
+  return `<button class="kp-b" data-a="kp" data-v="${k}">${k}</button>`; }).join('')}</div>`; }
+A.kp=d=>{ if(!ui.kp) return; let s=ui.kp.v||''; const k=d.v;
+ if(k==='bk') s=s.slice(0,-1); else if(k==='c') s=''; else if(k==='+'){ if(s&&!/[+,]$/.test(s)) s+='+'; }
+ else if(k===','){ const last=s.split('+').pop(); if(!last.includes(',')) s+=(last?'':'0')+','; }
+ else { const last=s.split('+').pop(); const dp=last.includes(',')?last.split(',')[1].length:-1; if(dp>=2) return; if(last.replace(',','').length>=10) return; if(last==='0'&&k!==',') s=s.slice(0,-1); s+=k; }
+ ui.kp.v=s; if(ui.kp.on) ui.kp.on(kpValue(s)); render(); };
+
+/* ---------- Резервная копия ---------- */
+function familyDump(){ const data={}; try{ for(let i=0;i<localStorage.length;i++){ const k=localStorage.key(i); if(/^ritm-[a-z]+-[a-z]+-v1$/.test(k)){ try{ data[k]=JSON.parse(localStorage.getItem(k)); }catch(e){} } } }catch(e){} return data; }
+function backupText(all){ return all?JSON.stringify({app:'ritm-all',v:1,saved:new Date().toISOString(),data:familyDump()}):JSON.stringify({app:'ritm-'+APP.id,v:1,saved:new Date().toISOString(),state:S,b:B}); }
+function backupUI(){
+ if(ui.backup==='export'||ui.backup==='exportAll'){ const all=ui.backup==='exportAll'; const txt=backupText(all); const sh=Native.canShare(); return `<label class="fld"><span class="lbl">${all?'Копия всего Ритма — всех четырёх приложений':'Резервная копия'} — сохраните этот текст в заметках или отправьте себе</span><textarea class="inp ta" id="bkout" readonly rows="5">${esc(txt)}</textarea></label><div class="split">${sh?`<button class="btn pri" data-a="bkShare" data-v="${all?'all':''}">Отправить</button><button class="btn sec" data-a="bkCopy">Скопировать</button>`:`<button class="btn pri" data-a="bkCopy">Скопировать</button><button class="btn sec" data-a="bkClose">Закрыть</button>`}</div>${sh?'<button class="btn ghost self-start" data-a="bkClose" style="padding:0">Закрыть</button>':''}`; }
+ if(ui.backup==='import') return `<label class="fld"><span class="lbl">Вставьте текст резервной копии</span><textarea class="inp ta" id="bkin" rows="5" data-i="bkin" placeholder="{&quot;app&quot;:&quot;ritm-${APP.id}&quot;, …}">${esc(ui.bkText||'')}</textarea></label>${ui.confirm==='restore'?confirmBox(ui.bkData&&ui.bkData.app==='ritm-all'&&window.RITM_APP?'Данные всех четырёх приложений будут заменены данными из копии.':'Текущие данные будут заменены данными из копии.','bkRestore','Заменить'):`<div class="split"><button class="btn pri" data-a="bkCheck">Восстановить</button><button class="btn sec" data-a="bkClose">Закрыть</button></div>`}`;
+ return `<div class="col-s">${window.RITM_APP?`<button class="btn pri blk" data-a="bkOpen" data-v="exportAll">Копия всего Ритма</button><button class="btn sec blk" data-a="bkOpen" data-v="export">Копия только «${APP.name}»</button>`:`<button class="btn sec blk" data-a="bkOpen" data-v="export">Создать резервную копию</button>`}<button class="btn sec blk" data-a="bkOpen" data-v="import">Восстановить из копии</button></div>${window.RITM_APP?'<p class="note">Копия всего Ритма восстанавливается в любом из четырёх приложений — сразу для всех.</p>':''}`; }
+function dataCard(){ return `<section class="card col-s"><h2 class="sec-h">Данные</h2><p class="p">${storageText()}</p>${backupUI()}${ui.confirm==='reset'?confirmBox('Удалить все данные приложения? Это нельзя отменить.','resetDo','Удалить всё'):`<button class="btn ghost danger-t self-start" data-a="ask" data-v="reset" style="padding:0">Сбросить все данные</button>`}</section>`; }
+function themeCard(){ return `<section class="card col-s"><h2 class="sec-h">Тема</h2>${seg([['auto','Авто'],['light','Светлая'],['dark','Тёмная']],'theme',S.theme||'auto','Тема')}</section>`; }
+function familyCard(){ const others=Object.keys(FAMILY).filter(k=>k!==APP.id); const on=others.filter(k=>Family.has(k));
+ return `<section class="card col-s"><h2 class="sec-h">Семейство Ритм</h2>${on.length?`<p class="p">Связаны: ${on.map(k=>'Ритм·'+FAMILY[k].n).join(', ')}. Их данные появляются здесь с пометкой источника.</p>`:`<p class="p">${APP.familyNote||'Когда приложения Ритм установлены вместе на телефоне, данные одного появляются в другом.'}</p>`}${Family.canOpen()?`<div class="fam">${others.map(k=>`<button class="fam-b" data-a="openApp" data-v="${k}"><span class="fam-i" style="background:${FAMILY[k].c}">${ic(FAMILY[k].ic,18)}</span><span>${FAMILY[k].n}</span></button>`).join('')}</div>`:''}</section>`; }
+
+/* ---------- Общие действия ---------- */
+Object.assign(A,{
+ tab:d=>{ ui.tab=d.t; ui.confirm=null; render(); window.scrollTo(0,0); try{ sessionStorage.setItem('ritm-'+APP.id+'-tab',d.t); }catch(e){} },
+ push:d=>{ const t={type:d.s}; if(d.id) t.id=d.id; if(d.m) t.m=d.m; if(d.x!=null&&d.x!=='') t.x=d.x; ui.confirm=null; if(APP.onPush) APP.onPush(t,d); ui.stack.push(t); render(); },
+ back:()=>{ const t=ui.stack.pop(); ui.confirm=null; if(APP.onBack) APP.onBack(t); render(); },
+ ask:d=>{ ui.confirm=d.v; render(); },
+ cancelConfirm:()=>{ ui.confirm=null; render(); },
+ st:d=>{ const a=APP.acc(d.k,d.x); if(!a) return; a.set(r2(a.get()+Number(d.v)*a.step)); if(a.after) a.after(); commit(); },
+ theme:d=>{ S.theme=d.v; applyTheme(); commit(); },
+ undo:()=>{ const u=ui.undo; ui.undo=null; const t=document.getElementById('toast'); if(t) t.hidden=true; if(u) u(); },
+ openApp:d=>{ if(!Family.open(d.v)) toast('Откройте Ритм·'+FAMILY[d.v].n+' на телефоне'); },
+ bkOpen:d=>{ ui.backup=d.v; ui.bkText=''; ui.bkData=null; ui.confirm=null; render(); },
+ bkClose:()=>{ ui.backup=null; ui.confirm=null; render(); },
+ bkCopy:async()=>{ const el=document.getElementById('bkout'); const txt=el?el.value:''; try{ await navigator.clipboard.writeText(txt); toast('Скопировано'); }catch(e){ if(el){ el.focus(); el.select(); } toast('Выделите текст и скопируйте вручную'); } },
+ bkCheck:()=>{ let d=null; try{ d=JSON.parse((ui.bkText||'').trim()); }catch(e){}
+  if(d&&d.app==='ritm-all'&&d.data){ const mine=d.data[LS_S()]; if(!window.RITM_APP&&!mine){ toast('В этой копии нет данных Ритм·'+APP.name); return; } ui.bkData=d; ui.confirm='restore'; render(); return; }
+  if(!d||d.app!=='ritm-'+APP.id||!d.state){ toast('Это не резервная копия Ритм·'+APP.name); return; } ui.bkData=d; ui.confirm='restore'; render(); },
+ bkRestore:async()=>{ const d=ui.bkData; if(!d) return;
+  if(d.app==='ritm-all'){ if(window.RITM_APP){ for(const [k,v] of Object.entries(d.data)) if(/^ritm-[a-z]+-[a-z]+-v1$/.test(k)&&k!==LS_S()&&k!==LS_B()) lsSet(k,v); } await Store.importAll(d.data[LS_S()]||null,d.data[LS_B()]||{}); }
+  else await Store.importAll(d.state,d.b||{});
+  ui.backup=null; ui.bkData=null; ui.confirm=null; ui.stack=S.setup?[]:[{type:'onboard'}]; applyTheme(); render(); syncReminders(); toast(d.app==='ritm-all'&&window.RITM_APP?'Весь Ритм восстановлен':'Данные восстановлены'); },
+ bkShare:d=>{ const all=d.v==='all'; if(!Native.share(backupText(all),all?'Ритм — резервная копия':'Ритм·'+APP.name+' — резервная копия')) A.bkCopy(); },
+ remAsk:()=>{ Native.ask(); },
+ remLater:()=>{ S.remind=S.remind||{}; S.remind.later=true; commit(); },
+ remOn:()=>{ S.remind=S.remind||{}; S.remind.on=S.remind.on===false; if(S.remind.on&&!Native.can()) Native.ask(); commit(); },
+ resetDo:async()=>{ await Store.reset(); ui.confirm=null; ui.stack=[]; applyTheme(); if(APP.afterReset) APP.afterReset(); render(); toast('Данные удалены'); }
+});
+Object.assign(C,{ sv:(d,t)=>{ const a=APP.acc(d.k,d.x); const v=parseNum(t.value); if(a&&v!=null){ a.set(v); if(a.after) a.after(); } commit(); } });
+Object.assign(I,{ bkin:(d,t)=>{ ui.bkText=t.value; } });
+
+/* ---------- Запуск ---------- */
+function boot(){
+ document.addEventListener('click',e=>{ const t=e.target.closest('[data-a]'); if(!t||t.disabled) return; const fn=A[t.dataset.a]; if(fn){ e.preventDefault(); fn(t.dataset,t,e); } });
+ document.addEventListener('change',e=>{ const t=e.target.closest('[data-c]'); if(t&&C[t.dataset.c]) C[t.dataset.c](t.dataset,t); });
+ document.addEventListener('input',e=>{ const t=e.target.closest('[data-i]'); if(t&&I[t.dataset.i]) I[t.dataset.i](t.dataset,t); });
+ document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.matches){ if(e.target.matches('input[data-enter]')){ e.preventDefault(); const fn=A[e.target.dataset.enter]; if(fn) fn(e.target.dataset,e.target,e); } else if(e.target.matches('input[data-c]')) e.target.blur(); } });
+ const resume=()=>{ Family._c={}; if(Store.changedOutside()){ Store.loadLocal(); applyTheme(); if(!S.setup&&!ui.stack.some(s=>s.type==='onboard')) ui.stack=[{type:'onboard'}]; } if(APP.onResume) APP.onResume(); else render(); syncReminders(); };
+ document.addEventListener('visibilitychange',()=>{ if(document.hidden) Store.flush(); else resume(); });
+ window.addEventListener('ritm-resume',resume); window.addEventListener('ritm-pause',()=>{ Store.flush(); if(APP.onPause) APP.onPause(); });
+ window.addEventListener('pagehide',()=>Store.flush());
+ if(HIST) window.addEventListener('popstate',onPop);
+ try{ const t=sessionStorage.getItem('ritm-'+APP.id+'-tab'); if(t&&APP.tabs.includes(t)) ui.tab=t; }catch(e){}
+ if(!ui.tab) ui.tab=APP.tabs[0];
+ Store.loadLocal(); applyTheme(); ui.booting=!S.setup; if(APP.afterLoad) APP.afterLoad(); render();
+ const done=()=>{ ui.booting=false; applyTheme(); if(APP.afterLoad) APP.afterLoad(); if(!S.setup){ if(!ui.stack.some(s=>s.type==='onboard')) ui.stack=[{type:'onboard'}]; } else ui.stack=ui.stack.filter(s=>s.type!=='onboard'); render(); syncReminders(); };
+ const fallback=setTimeout(()=>{ if(ui.booting) done(); },2500);
+ Store.init().then(()=>{ clearTimeout(fallback); done(); }).catch(()=>{ clearTimeout(fallback); done(); });
+ setInterval(()=>{ if(APP.tick) APP.tick(); },30000);
+}
+
+/* ============ Ритм·Семья — модель ============
+   Своего хранилища почти нет: всё общее лежит в данных приложений (Питание, Цели, Деньги)
+   и в семейном слое window.Fam (family.js). Здесь — чтение и правка этих данных для экранов. */
+Object.assign(IC,{
+ users:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1M16 3.13a4 4 0 0 1 0 7.75M22 21v-1a6 6 0 0 0-4-5.65"/>',
+ cart:'<path d="M6 6h15l-1.5 9h-12zM6 6L5 3H2M9 20h.01M18 20h.01"/>',
+ refresh:'<path d="M21 12a9 9 0 1 1-2.64-6.36M21 4v5h-5"/>',
+ share:'<path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>',
+ key:'<path d="M14.5 9.5a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0zM13.2 12.7L21 20.5M17.5 17l2-2M15 14.5l2-2"/>',
+ logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+ home:'<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',
+ lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+ link:'<path d="M10 14a4 4 0 0 0 5.66 0l3-3a4 4 0 0 0-5.66-5.66l-1 1M14 10a4 4 0 0 0-5.66 0l-3 3a4 4 0 0 0 5.66 5.66l1-1"/>'
+});
+function DEF(){ return {v:1,setup:false,theme:'auto'}; }
+function normalize(s){ const o=Object.assign(DEF(),s||{}); o.setup=hasFam(); return o; }
+function hasFam(){ return typeof Fam!=='undefined'&&Fam.on(); }
+const APP={id:'fam',name:'Семья',icon:'users',tabs:['today','shop','money','fam'],normalize,fab:()=>false,
+ afterLoad:()=>{ if(S) S.setup=hasFam(); }};
+const T_KEY='ritm-tseli-state-v1', P_KEY='ritm-pit-state-v1', D_KEY='ritm-dengi-state-v1', D_BKEY='ritm-dengi-b-v1';
+const PLACES={fridge:'Холодильник',freezer:'Морозилка',shelf:'Шкаф'};
+const WD2=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+const REPN={day:'каждый день',wd:'по будням',week:'каждую неделю',days:'по дням недели',month:'каждый месяц'};
+
+/* ---------- семьи и люди ---------- */
+function cur(){ return Fam.cur(); }
+function initial(n){ return esc(String(n||'?').trim().charAt(0).toUpperCase()||'?'); }
+function avatar(m,cls=''){ return `<span class="avb ${cls}" style="background:${esc(m.color)}" aria-hidden="true">${initial(m.name)}</span>`; }
+function whoTag(t){ const w=t.who; if(!w||w==='all') return `<span class="ftag"><i style="background:var(--muted)"></i>Все</span>`; if(String(w).startsWith('g:')) return `<span class="ftag"><i style="background:var(--muted)"></i>${esc(Fam.whoLabel(t))}</span>`; return Fam.tag(w); }
+function ago(t){ if(!t) return 'ещё не было'; const s=(Date.now()-t)/1000; if(s<60) return 'только что'; if(s<3600) return Math.floor(s/60)+' мин назад'; if(s<86400) return Math.floor(s/3600)+' ч назад'; const d=new Date(t); return fmtDay(dkey(d)); }
+function memberOf(id,fid){ return Fam.members(fid||cur()).find(m=>m.id===id)||null; }
+function groupName(gid,fid){ const g=Fam.groups(fid||cur()).find(x=>x.id===gid); return g?g.name:''; }
+
+/* ---------- задачи (из Ритм·Цели) ---------- */
+function tState(){ const st=lsGet(T_KEY); return st&&Array.isArray(st.tasks)?st:null; }
+function famTasks(fid){ fid=fid||cur(); const st=tState(); return st?st.tasks.filter(t=>Fam.scopeOf(t)===fid):[]; }
+function tDue(t,k){ if(!t.rep) return t.date===k; if(t.date&&k<t.date) return false; if(t.until&&k>t.until) return false; const w=wdi(k);
+ switch(t.rep.k){ case 'day': return true; case 'wd': return w<5; case 'week': return w===wdi(t.date||k); case 'days': return (t.rep.days||[]).includes(w); case 'month': return pkey(k).getDate()===pkey(t.date||k).getDate(); } return false; }
+function tDone(t,k){ return t.rep?!!(t.doneD&&t.doneD[k]):!!t.done; }
+function doneBy(id){ const f=(Fam.data(cur()).tasks||{})[id]; return f&&f.b?f.b:null; }
+function todayTasks(){ const k=dkey(); const L=famTasks().filter(t=>tDue(t,k)||(!t.rep&&t.date&&t.date<k&&!t.done)); return L.sort((a,b)=>(tDone(a,k)-tDone(b,k))||((a.date||'')<(b.date||'')?-1:1)||String(a.time||'99').localeCompare(String(b.time||'99'))); }
+function laterTasks(){ const k=dkey(); return famTasks().filter(t=>!t.rep&&!t.done&&(!t.date||t.date>k)).sort((a,b)=>(a.date||'9')<(b.date||'9')?-1:1); }
+
+/* ---------- покупки и холодильник (из Ритм·Питание, общие с «домашней» семьёй) ---------- */
+function isPit(){ return Fam.pitFam()===cur(); }
+function pState(){ return lsGet(P_KEY); }
+function shopList(){ const st=pState(); return st&&Array.isArray(st.shop)?st.shop.filter(x=>!x.priv):[]; }
+function homeList(){ const st=pState(); return st&&Array.isArray(st.home)?st.home.filter(x=>!x.priv):[]; }
+function expLeft(it){ return it.exp?dBetween(dkey(),it.exp):null; }
+function expText(it){ const n=expLeft(it); if(n==null) return ''; if(n<0) return '<span class="bad-t b">просрочено</span>'; if(n===0) return '<span class="bad-t b">до сегодня</span>'; if(n===1) return '<span class="warn-t b">до завтра</span>'; if(n<=3) return `<span class="warn-t b">ещё ${pl(n,['день','дня','дней'])}</span>`; return 'до '+fmtDay(it.exp); }
+function qtyT(it){ return it.qty!=null&&it.unit?fmt(it.qty,it.unit==='кг'||it.unit==='л'?2:0)+' '+esc(it.unit):''; }
+
+/* ---------- деньги ---------- */
+function famOps(from,to,fid){ fid=fid||cur(); const X=Fam.removed(fid); return Object.values(Fam.data(fid).ops||{}).filter(f=>!f.x&&f.d&&!X[f.a]&&f.d.date>=from&&f.d.date<=to).map(f=>Object.assign({id:f.id,by:f.a},f.d)).sort((a,b)=>a.date<b.date?1:-1); }
+function famPays(fid){ fid=fid||cur(); const st=lsGet(D_KEY); return st&&Array.isArray(st.pays)?st.pays.filter(p=>Fam.scopeOf(p)===fid&&!p.fresh):[]; }
+/* мои траты за период из Ритм·Деньги: личные и по семьям */
+function myOps(from,to){ const b=lsGet(D_BKEY)||{}; const out=[]; for(const x of Object.values(b)) for(const o of (x&&x.ops)||[]) if(o&&o.t==='exp'&&o.date>=from&&o.date<=to) out.push(o); return out; }
+function myCats(){ const st=lsGet(D_KEY); return st&&Array.isArray(st.cats)?st.cats:[]; }
+function monthRange(off=0){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+off); const from=dkey(d); const e=new Date(d.getFullYear(),d.getMonth()+1,0); return {from,to:dkey(e),name:MONTHS_IN[d.getMonth()]}; }
+const MONTHS_IN=['январе','феврале','марте','апреле','мае','июне','июле','августе','сентябре','октябре','ноябре','декабре'];
+
+/* ---------- тренировки (из Ритм·Тело) ---------- */
+function bodyOf(id){ const f=(Fam.data(cur()).body||{})[id]; return f&&!f.x&&f.d?f.d.days||{}:null; }
+function weekKeys(){ const t=dkey(); const w=wdi(t); const mon=addDays(t,-w); return [0,1,2,3,4,5,6].map(i=>addDays(mon,i)); }
+function money(v){ return (v<0?'−':'')+fmt(Math.abs(Math.round(v)),0)+' ₸'; }
+function openUrl(u){ try{ if(window.RitmNative&&window.RitmNative.openUrl){ window.RitmNative.openUrl(u); return; } }catch(e){} window.open(u,'_blank','noopener'); }
+
+/* ============ Ритм·Семья — экраны ============ */
+function famTop(){ const st=Fam.status(cur()); return topBar(`<button class="ibtn${st.busy?' spin':''}" data-a="famSync" aria-label="Синхронизировать">${ic('refresh',20)}</button>`); }
+/* переключатель семей: несколько семей — чипы, плюс «добавить» */
+function famSwitch(){ const L=Fam.list(); const c=cur();
+ return `<div class="scroller" role="tablist" aria-label="Семьи">${L.map(f=>`<button class="chip ichip" role="tab" data-a="famCur" data-v="${f.id}" aria-selected="${f.id===c}" aria-pressed="${f.id===c}">${ic('users',14)} ${esc(f.name)}</button>`).join('')}<button class="chip ichip" data-a="addFam" aria-label="Добавить семью">${ic('plus',14)} Семья</button></div>`; }
+function noticeCard(){ const n=Fam.notice(); return n?`<div class="callout warn"><p>${esc(n)}. Ваши записи остались у вас как личные.</p><button class="btn ghost sm" data-a="noticeOk" style="color:inherit">Понятно</button></div>`:''; }
+function heroCard(){ const M=Fam.members(cur()); const st=Fam.status(cur());
+ return `<section class="card dark hero"><span class="eyebrow">Семейный ритм</span><h1 class="h1">${esc(Fam.famName(cur()))}</h1><div class="avs">${M.map(m=>`<span class="av"><b style="background:${esc(m.color)}">${initial(m.name)}</b>${m.me?'Вы':esc(m.name)}</span>`).join('')}</div><span class="sync-l">${st.busy?'Синхронизирую…':st.err?'Не удалось синхронизировать':'Обновлено '+ago(st.at)}</span></section>`; }
+function errCard(){ const e=Fam.status(cur()).err; if(!e) return ''; return `<div class="callout warn"><p>${esc(e.msg)}</p><div class="row wrap gap6"><button class="btn sec sm" data-a="famSync">Повторить</button>${e.code==='auth'||e.code==='perm'?`<button class="btn ghost sm" data-a="push" data-s="token" style="color:inherit">Обновить ключ</button>`:''}</div></div>`; }
+function head(){ return famTop()+noticeCard()+famSwitch()+errCard(); }
+function taskRowF(t,k){ const done=tDone(t,k); const od=!t.rep&&t.date&&t.date<k&&!done; const by=done?doneBy(t.id):null;
+ const meta=[whoTag(t),od?`<span class="bad-t b">с ${fmtDay(t.date)}</span>`:'',t.time?ic('clock',12)+' '+esc(t.time):'',t.rep?ic('repeat',12)+' '+(REPN[t.rep.k]||''):'',done&&by?`<span class="ok-t b">${ic('check',12)} ${esc(Fam.name(by))}</span>`:''].filter(Boolean).join('');
+ return `<div class="trow${done?' is-done':''}"><button class="chk-hit" data-a="ftTog" data-id="${t.id}" data-k="${k}" aria-pressed="${done}" aria-label="${done?'Снять отметку':'Готово'}: ${esc(t.t)}"><span class="chk${done?' on':''}">${ic('check',18)}</span></button><button class="tmain" data-a="ftEdit" data-id="${t.id}"><span class="tt">${esc(t.t)}</span><span class="tmeta">${meta}</span></button></div>`; }
+function addTaskRow(){ return `<div class="addrow"><input class="inp sm" id="ftIn" type="text" placeholder="Задача для семьи на сегодня" maxlength="120" data-enter="ftAdd" enterkeyhint="done" autocomplete="off"><button class="ibtn acc" data-a="ftAdd" aria-label="Добавить задачу">${ic('plus',20)}</button></div>`; }
+function shopRowF(x,small){ return `<div class="shrow"><button class="chk-hit" data-a="fsTog" data-id="${x.id}" aria-pressed="${!!x.done}" aria-label="Куплено: ${esc(x.n)}"><span class="chk${x.done?' on':''}">${ic('check',18)}</span></button><span class="grow"><span class="${x.done?'done-t':''}">${esc(x.n)}${x.qty?` <span class="mut">· ${esc(x.qty)}</span>`:''}</span>${x.fa?`<span>${Fam.tag(x.fa)}</span>`:''}</span>${small?'':`<button class="ibtn sm ghostb" data-a="fsDel" data-id="${x.id}" aria-label="Убрать из списка">${ic('close',16)}</button>`}</div>`; }
+function weekCard(){ const M=Fam.members(cur()); const W=weekKeys(); const t=dkey(); const rows=M.map(m=>{ const days=bodyOf(m.id); const n=days?W.filter(k=>days[k]).reduce((s,k)=>s+days[k].n,0):0;
+  return `<span class="row" style="gap:8px;min-width:0">${avatar(m)}<span class="col-xs" style="min-width:0"><span class="b">${m.me?'Вы':esc(m.name)}</span><span class="note">${days?pl(n,['тренировка','тренировки','тренировок']):'не делится'}</span></span></span><span class="wk" style="--mc:${esc(m.color)}">${W.map(k=>`<i class="${days&&days[k]?'on':''}${k===t?' today':''}" title="${fmtDay(k)}${days&&days[k]?': '+esc((days[k].t||[]).join(', ')||'тренировка'):''}"></i>`).join('')}</span>`; }).join('');
+ return `<section class="card col-s"><div class="between"><h2 class="sec-h">Тренировки на неделе</h2><span class="wk-h" aria-hidden="true">${WD2.map(d=>`<span>${d.charAt(0)}</span>`).join('')}</span></div><div class="week">${rows}</div></section>`; }
+function pitOffCard(){ const p=Fam.pitFam(); return `<div class="card col-s"><p class="p">${p?`Покупки и продукты дома сейчас общие с семьёй «${esc(Fam.famName(p))}».`:'Покупки и продукты дома пока не общие ни с одной семьёй.'}</p><button class="btn sec sm self-start" data-a="famPit" data-v="${cur()}">Сделать общими с «${esc(Fam.famName(cur()))}»</button><p class="note">Список покупок и холодильник бывают общими только с одной семьёй — с теми, с кем вы живёте.</p></div>`; }
+
+VIEWS.today=()=>wrap(todayV());
+function todayV(){ if(!hasFam()) return famTop()+noticeCard()+`<div class="card">${empty('users','Создайте семью или присоединитесь по приглашению.','<button class="btn pri" data-a="obStart">Начать</button>')}</div>`;
+ const k=dkey(); let h=head()+heroCard();
+ const L=todayTasks(); const open=L.filter(t=>!tDone(t,k));
+ h+=`<section class="col-s"><div class="between"><h2 class="sec-h">Дела семьи сегодня</h2>${L.length?`<span class="note">${L.length-open.length} из ${L.length}</span>`:''}</div>${L.length?`<div class="tlist">${L.map(t=>taskRowF(t,k)).join('')}</div>`:'<p class="note">Семейных дел на сегодня нет. Добавьте здесь или отметьте задачу в Ритм·Цели.</p>'}${addTaskRow()}</section>`;
+ const later=laterTasks().slice(0,4); if(later.length) h+=`<section class="col-s"><h2 class="sec-h">Скоро</h2><div class="tlist">${later.map(t=>`<div class="trow"><button class="tmain" data-a="ftEdit" data-id="${t.id}"><span class="tt">${esc(t.t)}</span><span class="tmeta">${whoTag(t)}<span>${t.date?relDay(t.date):'без даты'}</span></span></button></div>`).join('')}</div></section>`;
+ if(isPit()){ const sh=shopList(); const need=sh.filter(x=>!x.done);
+  h+=`<section class="card col-s"><div class="between"><h2 class="sec-h">${ic('cart',18)} Купить</h2><button class="btn ghost sm" data-a="tab" data-t="shop">${need.length?'Весь список':'Открыть'}</button></div>${need.length?`<div class="col-xs">${need.slice(0,5).map(x=>shopRowF(x,true)).join('')}</div>${need.length>5?`<p class="note">и ещё ${need.length-5}</p>`:''}`:'<p class="note">Список покупок пуст.</p>'}</section>`;
+  const exp=homeList().filter(it=>{ const n=expLeft(it); return n!=null&&n<=2; }).sort((a,b)=>a.exp<b.exp?-1:1);
+  if(exp.length) h+=`<section class="card col-s"><h2 class="sec-h">Скоро испортится</h2>${exp.slice(0,5).map(it=>`<div class="between"><span>${esc(it.n)}${it.fa?' '+Fam.tag(it.fa):''}</span><span class="note">${expText(it)}</span></div>`).join('')}<p class="note">Рецепты из этих продуктов — в Ритм·Питание.</p></section>`; }
+ const pays=famPays().filter(p=>p.on&&dBetween(k,p.next)<=7).sort((a,b)=>a.next<b.next?-1:1);
+ if(pays.length) h+=`<section class="card col-s"><h2 class="sec-h">Платежи семьи на неделе</h2>${pays.map(p=>`<div class="between"><span class="col-xs"><span class="b">${esc(p.n)}</span><span class="note">${p.next<k?`<span class="bad-t b">просрочен с ${fmtDay(p.next)}</span>`:p.next===k?'сегодня':relDay(p.next)}</span></span><span class="b">${money(p.sum)}</span></div>`).join('')}<button class="btn sec sm self-start" data-a="openApp" data-v="dengi">Отметить оплату в Деньгах</button></section>`;
+ h+=weekCard();
+ return h; }
+
+VIEWS.shop=()=>wrap(shopV());
+function shopV(){ if(!hasFam()) return todayV(); let h=head();
+ if(!isPit()) return h+pitOffCard();
+ const sh=shopList(); const need=sh.filter(x=>!x.done), done=sh.filter(x=>x.done);
+ h+=`<section class="card col-s"><div class="between"><h2 class="sec-h">${ic('cart',18)} Купить</h2>${sh.length?`<span class="note">${need.length} из ${sh.length}</span>`:''}</div><div class="addrow"><input class="inp sm" id="fsIn" type="text" placeholder="Добавить в список" maxlength="40" data-enter="fsAdd" enterkeyhint="done" autocomplete="off"><button class="ibtn acc" data-a="fsAdd" aria-label="Добавить">${ic('plus',20)}</button></div>${sh.length?`<div class="col-xs">${need.concat(done).map(x=>shopRowF(x)).join('')}</div>`:'<p class="note">Список пуст. Добавляйте сюда или в Ритм·Питание — список общий для семьи.</p>'}${done.length?`<div class="row wrap gap6"><button class="btn sec sm" data-a="fsClear">Убрать купленное (${done.length})</button><button class="btn ghost sm" data-a="openApp" data-v="pit">Разложить дома — в Питании</button></div>`:''}<p class="note">${ic('lock',12)} Покупки «только мне» из Ритм·Питание сюда не попадают.</p></section>`;
+ const H=homeList(); const by={}; for(const it of H) (by[it.place||'fridge']=by[it.place||'fridge']||[]).push(it);
+ h+=`<section class="card col-s"><div class="between"><h2 class="sec-h">Дома</h2><span class="note">${pl(H.length,['продукт','продукта','продуктов'])}</span></div>${H.length?Object.keys(PLACES).filter(p=>by[p]).map(p=>`<div class="col-xs"><span class="lbl">${PLACES[p]}</span>${by[p].sort((a,b)=>(a.exp||'9')<(b.exp||'9')?-1:1).map(it=>`<div class="between" style="min-height:36px"><span>${esc(it.n)} <span class="mut">${qtyT(it)}</span>${it.fa?' '+Fam.tag(it.fa):''}</span><span class="note">${expText(it)}</span></div>`).join('')}</div>`).join(''):'<p class="note">Продукты дома ведутся в Ритм·Питание — их видит семья.</p>'}</section>`;
+ return h; }
+
+/* Вы: личное и семейное — по своим тратам из Ритм·Деньги */
+function myCompare(r){ const ops=myOps(r.from,r.to); if(!ops.length) return ''; const L=Fam.list(); const C=myCats(); const cn=id=>{ const c=C.find(x=>x.id===id); return c?c.n:'Другое'; };
+ const parts=[{id:null,n:'Личное',c:'var(--muted)'},...L.map((f,i)=>({id:f.id,n:f.name,c:['#E5577F','#2B8CC4','#E0A22E'][i%3]}))];
+ for(const p of parts) p.v=sum(ops.filter(o=>(Fam.scopeOf(o)||null)===p.id),o=>o.sum); const tot=sum(parts,p=>p.v)||1; const P=parts.filter(p=>p.v);
+ const byC={}; for(const o of ops){ const r2=byC[o.cat]||(byC[o.cat]={me:0,fam:0}); if(Fam.scopeOf(o)===cur()) r2.fam+=o.sum; else if(!Fam.scopeOf(o)) r2.me+=o.sum; }
+ const rows=Object.entries(byC).filter(([,x])=>x.me&&x.fam||x.fam).sort((a,b)=>(b[1].me+b[1].fam)-(a[1].me+a[1].fam)).slice(0,6);
+ return `<section class="card col-s"><h2 class="sec-h">Вы: личное и семейное</h2><p class="note">Ваши траты в ${r.name} из Ритм·Деньги. Личное видите только вы.</p><div class="mbar2">${P.map(p=>`<i style="width:${(p.v/tot*100).toFixed(1)}%;background:${p.c}"></i>`).join('')}</div>${P.map(p=>`<div class="between"><span class="row" style="gap:8px"><i class="dot" style="background:${p.c}"></i>${esc(p.n)}</span><span class="b">${money(p.v)} <span class="mut">· ${Math.round(p.v/tot*100)}%</span></span></div>`).join('')}${rows.length?`<span class="lbl">По категориям: личное / «${esc(Fam.famName(cur()))}»</span>${rows.map(([c,x])=>`<div class="between"><span>${esc(cn(c))}</span><span class="note">${money(x.me)} / ${money(x.fam)}</span></div>`).join('')}`:''}</section>`; }
+
+VIEWS.money=()=>wrap(moneyV());
+function moneyV(){ if(!hasFam()) return todayV(); let h=head(); const off=ui.mOff||0; const r=monthRange(off); const ops=famOps(r.from,r.to); const total=sum(ops,o=>o.sum); const bud=Fam.budget(cur());
+ h+=`<div class="chips">${[[0,'Этот месяц'],[-1,'Прошлый']].map(([v,l])=>`<button class="chip" data-a="mOff" data-v="${v}" aria-pressed="${off===v}">${l}</button>`).join('')}</div>`;
+ h+=`<section class="card dark hero"><span class="eyebrow">${esc(Fam.famName(cur()))} потратила в ${r.name}</span><span class="h1">${money(total)}</span>${bud?`${pbar(total/bud,total>bud?'bad':'')}<span class="sync-l">${total>bud?'Перерасход '+money(total-bud):'Осталось '+money(bud-total)} из ${money(bud)}</span>`:''}<button class="btn sec-dk sm self-start" data-a="push" data-s="budget">${ic('edit',16)} ${bud?'Изменить бюджет семьи':'Задать бюджет семьи'}</button></section>`;
+ if(!ops.length) h+=`<div class="card">${empty('wallet','Здесь — траты, отмеченные для этой семьи в Ритм·Деньги у каждого участника: продукты, дом, дети, отпуск.','<button class="btn sec" data-a="openApp" data-v="dengi">Открыть Деньги</button>')}</div>`;
+ else { const M=Fam.members(cur()); const byM={}; for(const o of ops) byM[o.by]=(byM[o.by]||0)+o.sum; const mx=Math.max(1,...Object.values(byM));
+  h+=`<section class="card col-s"><h2 class="sec-h">Кто сколько</h2>${Object.entries(byM).sort((a,b)=>b[1]-a[1]).map(([id,v])=>{ const m=M.find(x=>x.id===id)||{name:Fam.name(id),color:Fam.color(id)}; return `<div class="col-xs"><div class="between"><span class="row" style="gap:8px">${avatar(m)}<span class="b">${m.me?'Вы':esc(m.name)}</span></span><span class="b">${money(v)} <span class="mut">· ${Math.round(v/total*100)}%</span></span></div><div class="mbar"><i style="width:${(v/mx*100).toFixed(1)}%;background:${esc(m.color)}"></i></div></div>`; }).join('')}</section>`;
+  const byC={}; for(const o of ops){ const c=byC[o.cn]||(byC[o.cn]={n:o.cn,v:0}); c.v+=o.sum; } const C=Object.values(byC).sort((a,b)=>b.v-a.v); const cx=Math.max(1,...C.map(c=>c.v));
+  h+=`<section class="card col-s"><h2 class="sec-h">На что</h2>${C.slice(0,8).map((c,i)=>`<div class="col-xs"><div class="between"><span>${esc(c.n)}</span><span class="b">${money(c.v)}</span></div><div class="mbar"><i style="width:${(c.v/cx*100).toFixed(1)}%;background:${PALETTE[i%PALETTE.length]}"></i></div></div>`).join('')}</section>`; }
+ h+=myCompare(r);
+ if(ops.length) h+=`<section class="col-s"><h2 class="sec-h">Последние траты семьи</h2><div class="list">${ops.slice(0,15).map(o=>`<div class="li"><span class="li-m"><span class="li-t">${esc(o.cn)}</span><span class="li-s">${fmtDay(o.date)}${o.note?' · '+esc(o.note):''}</span><span>${Fam.tag(o.by)}</span></span><span class="li-e">${money(-o.sum)}</span></div>`).join('')}</div></section>`;
+ const P=famPays().sort((a,b)=>a.next<b.next?-1:1);
+ h+=`<section class="col-s"><h2 class="sec-h">Платежи семьи</h2>${P.length?`<div class="list">${P.map(p=>`<div class="li"><span class="li-m"><span class="li-t">${esc(p.n)}${p.on?'':' <span class="mut">· на паузе</span>'}</span><span class="li-s">${p.next<dkey()?`<span class="bad-t b">просрочен с ${fmtDay(p.next)}</span>`:'следующий '+relDay(p.next).toLowerCase()}</span>${p.fa?`<span>${Fam.tag(p.fa)}</span>`:''}</span><span class="li-e">${money(p.sum)}</span></div>`).join('')}</div>`:'<p class="note">Отметьте платёж для этой семьи в Ритм·Деньги (аренда, коммуналка, садик) — он появится у всех, и оплатить сможет любой.</p>'}</section>`;
+ return h; }
+
+VIEWS.fam=()=>wrap(famV());
+function famV(){ if(!hasFam()) return todayV(); const fid=cur(); const f=Fam.fam(fid); const st=Fam.status(fid); const M=Fam.members(fid); const adm=Fam.isAdmin(fid); const G=Fam.groups(fid); let h=head();
+ h+=`<section class="col-s"><div class="between"><h2 class="sec-h">${esc(Fam.famName(fid))}</h2>${adm?`<button class="btn ghost sm" data-a="push" data-s="famName">${ic('edit',14)} Название</button>`:''}</div><p class="note">${pl(M.length,['участник','участника','участников'])}${adm?' · вы владелец':''}</p>
+  <div class="list">${M.map(m=>`<button class="mrow li" data-a="push" data-s="member" data-id="${m.id}">${avatar(m,'lg')}<span class="grow col-xs"><span class="b">${esc(m.name)}${m.me?' <span class="mut">· вы</span>':''}</span><span class="note">${[m.role==='admin'?'владелец':'',m.group?esc(groupName(m.group)):'',m.me?'обновлено '+ago(st.at):'обновлял(а) '+ago(m.at)].filter(Boolean).join(' · ')}</span></span><span class="chev">${ic('right',18)}</span></button>`).join('')}</div></section>`;
+ h+=`<section class="card col-s"><div class="between"><h2 class="sec-h">Группы</h2>${adm?`<button class="btn ghost sm" data-a="push" data-s="groups">${G.length?'Изменить':'Создать'}</button>`:''}</div>${G.length?`<div class="col-xs">${G.map(g=>{ const ms=M.filter(m=>m.group===g.id); return `<div class="between"><span class="b">${esc(g.name)}</span><span class="note">${ms.length?ms.map(m=>m.me?'вы':esc(m.name)).join(', '):'пусто'}</span></div>`; }).join('')}</div><p class="note">Задачу можно поручить целой группе — она появится у каждого в группе.</p>`:`<p class="note">${adm?'Соберите участников в группы — например, «Взрослые» и «Дети» — чтобы поручать дела сразу группе.':'Группы создаёт владелец семьи.'}</p>`}</section>`;
+ h+=`<section class="card col-s"><h2 class="sec-h">Пригласить в семью</h2><p class="p">Отправьте приглашение. Его вставляют в Ритм·Семья → «+ Семья» → «У меня есть приглашение» — на Android или iPhone.</p><div class="code" aria-label="Приглашение">${esc(Fam.invite(fid).slice(0,90))}…</div><div class="split"><button class="btn pri" data-a="invShare">${ic('share',16)} Отправить</button><button class="btn sec" data-a="invCopy">${ic('copy',16)} Скопировать</button></div><p class="note">${ic('lock',13)} В приглашении ключ доступа и ключ шифрования. Отправляйте только своим и удалите сообщение, когда его вставят.</p></section>`;
+ h+=`<section class="card col-s"><h2 class="sec-h">Что видит эта семья</h2><div class="chips"><button class="chip" data-a="famPit" data-v="${isPit()?'':fid}" aria-pressed="${isPit()}">Покупки и продукты дома</button><button class="chip" data-a="famBody" aria-pressed="${Fam.shareBody(fid)}">Мои тренировки</button></div><p class="note">Покупки и холодильник бывают общими только с одной семьёй. Задачи, траты и платежи уходят в семью только с её отметкой — в Целях и Деньгах. Остальное остаётся личным.</p></section>`;
+ h+=`<section class="card col-s"><h2 class="sec-h">Вы</h2><label class="fld"><span class="lbl">Имя</span><input class="inp" id="meName" type="text" value="${esc(f.mname)}" maxlength="24" data-c="meName"></label><span class="lbl">Цвет</span><div class="colors">${Fam.COLORS.map(([col,n])=>`<button class="cdot" style="background:${col}" data-a="meColor" data-v="${col}" aria-pressed="${f.color===col}" aria-label="${n}"></button>`).join('')}</div><p class="note">Имя и цвет одинаковые во всех ваших семьях.</p></section>`;
+ h+=`<section class="card col-s"><h2 class="sec-h">Синхронизация</h2><p class="p">Данные семьи лежат в закрытом репозитории <b>${esc(f.repo)}</b>${f.dir!=='family'?` (папка ${esc(f.dir)})`:''} на GitHub и зашифрованы на телефоне — без ключа из приглашения их не прочитать.</p><p class="note">${st.err?esc(st.err.msg):'Последняя синхронизация: '+ago(st.at)}</p><div class="row wrap gap6"><button class="btn sec sm" data-a="famSync">${ic('refresh',16)} Синхронизировать</button><button class="btn ghost sm" data-a="push" data-s="token">${ic('key',16)} Обновить ключ доступа</button></div></section>`;
+ h+=ui.confirm==='leave'?confirmBox(`Выйти из семьи «${esc(Fam.famName(fid))}»? Ваши задачи и платежи этой семьи останутся у вас как личные, а у семьи пропадут ваши траты и тренировки.`,'famLeave','Выйти'):`<button class="btn ghost danger-t self-start" data-a="ask" data-v="leave">${ic('logout',16)} Выйти из семьи</button>`;
+ return h; }
+function wrap(h){ return `<div class="col">${h}</div>`; }
+
+/* ============ Ритм·Семья — листы ============ */
+const TOKEN_URL='https://github.com/settings/personal-access-tokens/new';
+const NEWREPO_URL='https://github.com/new';
+function colorPick(act,cur){ return `<div class="colors">${Fam.COLORS.map(([col,n])=>`<button class="cdot" style="background:${col}" data-a="${act}" data-v="${col}" aria-pressed="${cur===col}" aria-label="${n}"></button>`).join('')}</div>`; }
+function obErr(){ const o=ui.ob; return o&&o.err?`<div class="callout warn"><p>${esc(o.err)}</p></div>`:''; }
+function obBusyBtn(act,label){ const o=ui.ob; return `<button class="btn pri blk" data-a="${act}"${o.busy?' disabled':''}>${o.busy?'Проверяю…':label}</button>`; }
+
+function newOb(add){ const f=add?Fam.fam():null; return {step:'intro',add:!!add,name:f?f.mname:'',color:f?f.color:Fam.COLORS[0][0],family:'',repo:f?f.repo:'',token:'',same:!!f,invite:'',err:'',busy:false}; }
+SH.onboard=()=>famFlow(false);
+SH.addFam=()=>famFlow(true);
+function famFlow(add){ const o=ui.ob||(ui.ob=newOb(add)); let b='',foot='',title=add?'Добавить семью':'Семейный ритм';
+ if(o.step==='intro'){
+  b=`<div class="col-xs"><span class="eyebrow-l">Ритм для всей семьи</span><h1 class="h1">Общие покупки, дела и траты</h1></div><p class="p">Каждый ведёт свой Ритм на своём телефоне — Android или iPhone. Общее приходит ко всем само при открытии приложения, где бы вы ни были.</p>
+  <div class="intro-g"><div><b>Покупки и холодильник</b><span>Купил один — у другого вычеркнулось</span></div><div><b>Дела семьи</b><span>Кто что делает и что уже сделано</span></div><div><b>Семейный бюджет</b><span>Общие траты, платежи и кто сколько</span></div><div><b>Тренировки</b><span>Кто тренировался на неделе</span></div></div>
+  <div class="callout mut"><p>${ic('lock',14)} Личное остаётся личным: в семью уходит только то, что отмечено «Для семьи». Данные хранятся в вашем закрытом репозитории на GitHub и шифруются прямо на телефоне.</p></div>`;
+  if(add) b=`<div class="col-xs"><span class="eyebrow-l">Ещё одна семья</span><h1 class="h1">Создать или войти по приглашению</h1></div><p class="p">Например, семья с родителями или с братьями и сёстрами. У каждой семьи свои участники, дела, траты и бюджет; переключаться — вверху Ритм·Семья.</p>`;
+  foot=`<button class="btn pri blk" data-a="obGo" data-v="create1">Создать семью</button><button class="btn sec blk" data-a="obGo" data-v="join">У меня есть приглашение</button>`; }
+ else if(o.step==='create1'){ title='Новая семья';
+  b=`<div class="col-xs"><span class="eyebrow-l">Шаг 1 из 2</span><h1 class="h1">Кто вы в семье</h1></div><label class="fld"><span class="lbl">Ваше имя</span><input class="inp" id="obName" type="text" value="${esc(o.name)}" placeholder="Например, Faisal" maxlength="24" data-i="ob" data-k="name"></label><span class="lbl">Ваш цвет</span>${colorPick('obColor',o.color)}<label class="fld"><span class="lbl">Название семьи</span><input class="inp" id="obFam" type="text" value="${esc(o.family)}" placeholder="Например, Семья Абдулла" maxlength="40" data-i="ob" data-k="family"></label>`;
+  foot=`<div class="split"><button class="btn sec" data-a="obGo" data-v="intro">Назад</button><button class="btn pri" data-a="obGo" data-v="create2">Дальше</button></div>`; }
+ else if(o.step==='create2'){ title='Новая семья';
+  const prev=add?Fam.fam():null;
+  if(prev&&o.same){ b=`<div class="col-xs"><span class="eyebrow-l">Шаг 2 из 2</span><h1 class="h1">Где хранить данные семьи</h1></div><div class="chips"><button class="chip" data-a="obSame" data-v="1" aria-pressed="true">Там же, где «${esc(Fam.famName(prev.id))}»</button><button class="chip" data-a="obSame" data-v="" aria-pressed="false">Отдельный репозиторий</button></div><p class="p">Данные новой семьи лягут в отдельную папку репозитория <b>${esc(prev.repo)}</b> со своим ключом шифрования. Новый ключ GitHub не нужен.</p><p class="note">${ic('lock',13)} Участники новой семьи не смогут прочитать данные «${esc(Fam.famName(prev.id))}», но ключ доступа у вас будет общий. Для полной раздельности выберите отдельный репозиторий.</p>${obErr()}`;
+   foot=`<div class="split"><button class="btn sec" data-a="obGo" data-v="create1"${o.busy?' disabled':''}>Назад</button>${obBusyBtn('obCreate','Создать семью')}</div>`; return sheet({title,left:add?'close':'',body:b,foot}); }
+  b=`<div class="col-xs"><span class="eyebrow-l">Шаг 2 из 2</span><h1 class="h1">Где хранить данные семьи</h1></div>${prev?`<div class="chips"><button class="chip" data-a="obSame" data-v="1" aria-pressed="false">Там же, где «${esc(Fam.famName(prev.id))}»</button><button class="chip" data-a="obSame" data-v="" aria-pressed="true">Отдельный репозиторий</button></div>`:''}<p class="p">Нужен закрытый репозиторий на GitHub и ключ доступа к нему. Это делается один раз, на компьютере или в браузере телефона.</p>
+  <ol class="steps-n"><li>Создайте <b>закрытый</b> репозиторий: имя <code>ritm-family</code>, видимость <b>Private</b>. <button class="btn ghost sm" data-a="obUrl" data-v="repo" style="padding:0">${ic('link',14)} github.com/new</button></li>
+  <li>Создайте ключ: <button class="btn ghost sm" data-a="obUrl" data-v="token" style="padding:0">${ic('link',14)} Fine-grained token</button><br>Название — «Ритм семья», срок — максимальный.<br><b>Repository access</b> → Only select repositories → <code>ritm-family</code>.<br><b>Permissions</b> → Repository permissions → <b>Contents</b> → Read and write.<br>Нажмите Generate token и скопируйте ключ — он начинается с <code>github_pat_</code>.</li></ol>
+  <label class="fld"><span class="lbl">Репозиторий</span><input class="inp mono" id="obRepo" type="text" value="${esc(o.repo)}" placeholder="NeAlta/ritm-family" autocapitalize="off" autocorrect="off" spellcheck="false" data-i="ob" data-k="repo"></label>
+  <label class="fld"><span class="lbl">Ключ доступа</span><input class="inp mono" id="obToken" type="password" value="${esc(o.token)}" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="ob" data-k="token"></label>${obErr()}`;
+  foot=`<div class="split"><button class="btn sec" data-a="obGo" data-v="create1"${o.busy?' disabled':''}>Назад</button>${obBusyBtn('obCreate','Создать семью')}</div>`; }
+ else if(o.step==='join'){ title='Присоединиться';
+  const inv=o.invite?Fam.parseInvite(o.invite):null;
+  b=`<div class="col-xs"><span class="eyebrow-l">По приглашению</span><h1 class="h1">Вставьте приглашение</h1></div><p class="p">Его отправляет тот, кто создал семью: Ритм·Семья → вкладка «Семья» → «Отправить».</p><label class="fld"><span class="lbl">Приглашение</span><textarea class="inp mono" id="obInv" rows="4" placeholder="RITM-FAMILY:…" autocapitalize="off" spellcheck="false" data-i="ob" data-k="invite">${esc(o.invite)}</textarea></label>${inv?`<div class="callout acc"><p>${ic('check',14)} Семья «${esc(inv.n||'Семья')}»</p></div>`:''}
+  <label class="fld"><span class="lbl">Ваше имя</span><input class="inp" id="obName" type="text" value="${esc(o.name)}" placeholder="Например, Айжан" maxlength="24" data-i="ob" data-k="name"></label><span class="lbl">Ваш цвет</span>${colorPick('obColor',o.color)}${obErr()}`;
+  foot=`<div class="split"><button class="btn sec" data-a="obGo" data-v="intro"${o.busy?' disabled':''}>Назад</button>${obBusyBtn('obJoin','Присоединиться')}</div>`; }
+ else if(o.step==='done'){ title='Готово';
+  b=`<div class="col-xs"><span class="eyebrow-l">${ic('check',14)} ${o.joined?'Вы в семье':'Семья создана'}</span><h1 class="h1">${esc(Fam.famName(Fam.cur()))}</h1></div>${o.joined?`<p class="p">Общие покупки, дела и траты уже на телефоне. В Целях и Деньгах появилась отметка «Для семьи».</p>`:`<p class="p">Теперь пригласите семью: отправьте приглашение, например, в Telegram. Его вставляют в Ритм·Семья → «У меня есть приглашение».</p><div class="code">${esc(Fam.invite(Fam.cur()).slice(0,90))}…</div><div class="split"><button class="btn pri" data-a="invShare">${ic('share',16)} Отправить</button><button class="btn sec" data-a="invCopy">${ic('copy',16)} Скопировать</button></div><p class="note">${ic('lock',13)} В приглашении ключ доступа — отправляйте только своим.</p>`}`;
+  foot=`<button class="btn ${o.joined?'pri':'sec'} blk" data-a="obFinish">Готово</button>`; }
+ return sheet({title,left:add&&o.step!=='done'?'close':'',body:b,foot}); }
+
+SH.ftask=top=>{ const t=ui.ft; if(!t) return sheet({title:'',body:''}); const today=dkey(); const isNew=!t.id; const M=Fam.members(cur()); const G=Fam.groups(cur());
+ const dch=[[today,'Сегодня'],[addDays(today,1),'Завтра'],['','Без даты']];
+ let b=`<label class="fld"><span class="lbl">Задача</span><input class="inp" id="ftT" type="text" value="${esc(t.t)}" placeholder="Что нужно сделать?" maxlength="120" data-i="ft" data-k="t" enterkeyhint="done"></label>`;
+ b+=`<div class="col-xs"><span class="lbl">Кто сделает</span><div class="chips"><button class="chip" data-a="ftWho" data-v="all" aria-pressed="${!t.who||t.who==='all'}">Любой</button>${G.map(g=>`<button class="chip" data-a="ftWho" data-v="g:${g.id}" aria-pressed="${t.who==='g:'+g.id}">${esc(g.name)}</button>`).join('')}${M.map(m=>`<button class="chip ichip" data-a="ftWho" data-v="${m.id}" aria-pressed="${t.who===m.id}"><i class="dot" style="background:${esc(m.color)};width:10px;height:10px;border-radius:50%;display:inline-block"></i> ${m.me?'Я':esc(m.name)}</button>`).join('')}</div></div>`;
+ b+=`<div class="col-xs"><span class="lbl">Когда</span><div class="chips">${dch.map(([k,l])=>`<button class="chip" data-a="ftDate" data-v="${k}" aria-pressed="${(t.date||'')===k}">${l}</button>`).join('')}<label class="chip datechip" aria-pressed="${!!t.date&&!dch.some(([k])=>k===t.date)}">${ic('cal',16)} ${t.date&&!dch.some(([k])=>k===t.date)?relDay(t.date):'Дата'}<input type="date" value="${t.date||''}" data-c="ftDateIn" aria-label="Выбрать дату"></label></div></div>`;
+ if(t.rep) b+=`<p class="note">${ic('repeat',13)} Повторяется ${REPN[t.rep.k]||''}. Повтор меняется в Ритм·Цели.</p>`;
+ b+=`<label class="fld"><span class="lbl">Заметка</span><textarea class="inp" id="ftN" rows="3" data-i="ft" data-k="note" placeholder="Подробности">${esc(t.note||'')}</textarea></label>`;
+ if(!isNew) b+=ui.confirm==='ftdel'?confirmBox('Удалить задачу у всей семьи?','ftDel'):`<button class="btn ghost danger-t self-start" data-a="ask" data-v="ftdel" style="padding:0">${ic('trash',16)} Удалить задачу</button>`;
+ return sheet({title:isNew?'Задача для семьи':'Задача семьи',left:'close',body:b,foot:`<button class="btn pri blk" data-a="ftSave"${(t.t||'').trim()?'':' disabled'}>${isNew?'Добавить':'Сохранить'}</button>`}); };
+
+SH.budget=()=>{ const v=ui.bud!=null?ui.bud:String(Fam.budget(cur())||'');
+ const b=`<p class="p">Сколько семья готова тратить в месяц на общее: продукты, дом, детей. Считаются траты с отметкой «Для семьи» у всех.</p><label class="fld"><span class="lbl">Бюджет семьи на месяц, ₸</span><input class="inp" id="budIn" type="text" inputmode="numeric" value="${esc(v)}" placeholder="Например, 400 000" data-i="bud"></label><div class="chips">${[200000,300000,400000,500000].map(x=>`<button class="chip" data-a="budSet" data-v="${x}">${fmt(x,0)}</button>`).join('')}</div>`;
+ return sheet({title:'Бюджет семьи',left:'close',body:b,foot:`<button class="btn pri blk" data-a="budSave">Сохранить</button>${Fam.budget(cur())?'<button class="btn ghost blk" data-a="budSet" data-v="0" data-save="1">Без бюджета</button>':''}`}); };
+
+SH.token=()=>{ const b=`<p class="p">Если ключ истёк или его отозвали, создайте новый с теми же настройками и вставьте сюда. Потом отправьте семье новое приглашение — в нём новый ключ.</p><ol class="steps-n"><li><button class="btn ghost sm" data-a="obUrl" data-v="token" style="padding:0">${ic('link',14)} Создать fine-grained token</button></li><li>Only select repositories → <code>${esc((Fam.fam()||{}).repo||'ritm-family')}</code>; Contents → Read and write.</li></ol><label class="fld"><span class="lbl">Новый ключ доступа</span><input class="inp mono" id="tokIn" type="password" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false" data-i="tok"></label>`;
+ return sheet({title:'Ключ доступа',left:'close',body:b,foot:`<button class="btn pri blk" data-a="tokSave">Сохранить ключ</button>`}); };
+
+SH.settings=()=>sheet({title:'Настройки',body:themeCard()+`<section class="card col-s"><h2 class="sec-h">О Семейном ритме</h2><p class="p">Покупки и продукты дома — общие целиком. Задачи, траты и платежи — только с отметкой «Для семьи». Тренировки — только сколько и когда.</p><p class="note">Если одну запись поменяли двое, остаётся более поздняя правка. Удалённое удаляется у всех.</p></section>`});
+
+/* участник семьи: группа, роль, удаление — у владельца */
+SH.member=top=>{ const fid=cur(); const m=memberOf(top.id); if(!m) return sheet({title:'Участник',body:'<p class="p">Участника больше нет в семье.</p>'}); const adm=Fam.isAdmin(fid); const G=Fam.groups(fid); const st=Fam.status(fid);
+ let b=`<div class="row" style="gap:14px">${avatar(m,'lg')}<div class="col-xs"><span class="hero-n b">${esc(m.name)}${m.me?' <span class="mut">· вы</span>':''}</span><span class="note">${m.role==='admin'?'<span class="role">владелец</span> ':''}${m.me?'обновлено '+ago(st.at):'обновлял(а) '+ago(m.at)}</span></div></div>`;
+ if(adm){ b+=`<div class="col-xs"><span class="lbl">Группа</span><div class="chips"><button class="chip" data-a="mGroup" data-id="${m.id}" data-v="" aria-pressed="${!m.group}">Без группы</button>${G.map(g=>`<button class="chip" data-a="mGroup" data-id="${m.id}" data-v="${g.id}" aria-pressed="${m.group===g.id}">${esc(g.name)}</button>`).join('')}<button class="chip ichip" data-a="push" data-s="groups">${ic('plus',14)} Группа</button></div></div>`;
+  const admins=Fam.members(fid).filter(x=>x.role==='admin').length;
+  b+=`<div class="col-xs"><span class="lbl">Роль</span><div class="chips"><button class="chip" data-a="mRole" data-id="${m.id}" data-v="member" aria-pressed="${m.role!=='admin'}"${m.me&&admins<=1?' disabled':''}>Участник</button><button class="chip" data-a="mRole" data-id="${m.id}" data-v="admin" aria-pressed="${m.role==='admin'}">Владелец</button></div><span class="note">Владелец меняет название семьи, группы и состав.${m.me&&admins<=1?' Вы единственный владелец — сначала назначьте ещё одного.':''}</span></div>`;
+  if(!m.me) b+=ui.confirm==='mdel'?confirmBox(`Удалить ${esc(m.name)} из семьи? Он(а) перестанет видеть общие дела и траты. Чтобы закрыть доступ полностью, создайте новый ключ доступа и отправьте остальным новое приглашение.`,'mDel','Удалить',`data-id="${m.id}"`):`<button class="btn ghost danger-t self-start" data-a="ask" data-v="mdel">${ic('trash',16)} Удалить из семьи</button>`; }
+ else b+=`<p class="note">${m.group?'Группа: '+esc(groupName(m.group))+'. ':''}Группы и состав семьи меняет владелец.</p>`;
+ if(m.me) b+=`<p class="note">Имя и цвет — во вкладке «Семья», раздел «Вы».</p>`;
+ return sheet({title:m.me?'Вы в семье':m.name,body:b}); };
+
+/* группы семьи */
+SH.groups=()=>{ const fid=cur(); const G=Fam.groups(fid); const adm=Fam.isAdmin(fid); const M=Fam.members(fid);
+ let b=`<p class="p">Группы помогают поручать дела сразу нескольким людям: «Взрослые», «Дети», «Кто водит машину».</p>`;
+ b+=G.length?`<div class="col-s">${G.map(g=>`<div class="col-xs"><div class="grow-in"><input class="inp sm" type="text" value="${esc(g.name)}" maxlength="24" data-c="gName" data-id="${g.id}"${adm?'':' disabled'} aria-label="Название группы">${adm?`<button class="ibtn sm ghostb" data-a="gDel" data-id="${g.id}" aria-label="Удалить группу">${ic('trash',16)}</button>`:''}</div><div class="chips">${M.map(m=>`<button class="chip" data-a="gMem" data-id="${m.id}" data-v="${g.id}" aria-pressed="${m.group===g.id}"${adm?'':' disabled'}>${m.me?'Я':esc(m.name)}</button>`).join('')}</div></div>`).join('')}</div>`:'<p class="note">Групп пока нет.</p>';
+ if(adm) b+=`<div class="grow-in"><input class="inp sm" id="gNew" type="text" placeholder="Новая группа" maxlength="24" data-enter="gAdd" enterkeyhint="done"><button class="ibtn acc" data-a="gAdd" aria-label="Добавить группу">${ic('plus',20)}</button></div>`;
+ return sheet({title:'Группы',body:b}); };
+
+SH.famName=()=>sheet({title:'Название семьи',left:'close',body:`<label class="fld"><span class="lbl">Название</span><input class="inp" id="fnIn" type="text" value="${esc(Fam.famName(cur()))}" maxlength="40" data-enter="fnSave" enterkeyhint="done"></label><p class="note">Название увидят все участники.</p>`,foot:`<button class="btn pri blk" data-a="fnSave">Сохранить</button>`});
+
+/* ============ Ритм·Семья — действия ============ */
+function ensureT(st){ if(!Array.isArray(st.tasks)) st.tasks=[]; if(!Array.isArray(st.goals)) st.goals=[]; }
+function ensureP(st){ if(!Array.isArray(st.shop)) st.shop=[]; if(!Array.isArray(st.home)) st.home=[]; }
+function obFail(e){ ui.ob.busy=false; ui.ob.err=e&&e.message?e.message:'Не получилось — проверьте интернет и попробуйте ещё раз'; render(); }
+function obDone(joined){ const o=ui.ob; o.busy=false; o.step='done'; o.joined=joined; o.token=''; o.invite=''; S.setup=true; Store.save(); render(); }
+Object.assign(A,{
+ obStart:()=>{ ui.ob=null; if(!ui.stack.some(s=>s.type==='onboard')) ui.stack.push({type:'onboard'}); render(); },
+ addFam:()=>{ ui.ob=null; ui.stack.push({type:'addFam'}); render(); },
+ obGo:d=>{ const o=ui.ob; o.err='';
+  if(d.v==='create2'&&!o.name.trim()){ toast('Введите имя'); const el=document.getElementById('obName'); if(el) el.focus(); return; }
+  o.step=d.v; if(d.v==='join'&&!o.add&&o.color===Fam.COLORS[0][0]) o.color=Fam.COLORS[1][0]; render(); const b=document.querySelector('.sh-body'); if(b) b.scrollTop=0; },
+ obColor:d=>{ ui.ob.color=d.v; render(); },
+ obSame:d=>{ ui.ob.same=!!d.v; ui.ob.err=''; render(); },
+ obUrl:d=>openUrl(d.v==='repo'?NEWREPO_URL:TOKEN_URL),
+ obCreate:async()=>{ const o=ui.ob; if(o.busy) return; o.err=''; o.busy=true; render(); const prev=o.add&&o.same?Fam.fam():null;
+  try{ await Fam.create({repo:prev?prev.repo:o.repo,token:prev?prev.token:o.token,name:o.name.trim()||'Я',color:o.color,family:o.family.trim()||'Наша семья',pit:o.add?false:undefined}); obDone(false); }
+  catch(e){ obFail(e); } },
+ obJoin:async()=>{ const o=ui.ob; if(o.busy) return; o.err='';
+  if(!Fam.parseInvite(o.invite)){ o.err='Это не приглашение Ритма — скопируйте его целиком, вместе с RITM-FAMILY:'; render(); return; }
+  if(!o.name.trim()){ toast('Введите имя'); return; }
+  o.busy=true; render();
+  try{ await Fam.join(o.invite,{name:o.name.trim(),color:o.color,pit:o.add?false:undefined}); obDone(true); }
+  catch(e){ obFail(e); } },
+ obFinish:()=>{ ui.ob=null; ui.stack=[]; ui.tab='today'; S.setup=true; commit(); },
+ famCur:d=>{ Fam.setCur(d.v); ui.confirm=null; render(); },
+ noticeOk:()=>{ Fam.clearNotice(); render(); },
+ famSync:async()=>{ const r=await Fam.sync({force:true}); if(r&&r.ok) toast('Синхронизировано'); else if(r&&r.locked) toast('Синхронизация уже идёт'); render(); },
+ famPit:d=>{ Fam.setPit(d.v||null); render(); toast(d.v?'Покупки и продукты дома — общие с «'+Fam.famName(d.v)+'»':'Покупки и продукты дома больше не общие'); },
+ famBody:()=>{ Fam.setShareBody(cur(),!Fam.shareBody(cur())); render(); },
+ meColor:d=>{ Fam.setMe({color:d.v}); render(); },
+ invShare:()=>{ const t='Приглашение в семью «'+Fam.famName(cur())+'» в Ритме. Откройте Ритм·Семья → «У меня есть приглашение» и вставьте:\n\n'+Fam.invite(cur()); if(!Native.share(t,'Ритм — приглашение в семью')) A.invCopy(); },
+ invCopy:async()=>{ try{ await navigator.clipboard.writeText(Fam.invite(cur())); toast('Приглашение скопировано'); }catch(e){ toast('Не удалось скопировать'); } },
+ famLeave:async()=>{ const n=Fam.famName(cur()); ui.confirm=null; await Fam.leave(cur()); if(!Fam.on()){ S.setup=false; ui.stack=[{type:'onboard'}]; ui.ob=null; } commit(); toast('Вы вышли из семьи «'+n+'»'); },
+ /* участники и группы */
+ mGroup:d=>{ Fam.admin.setGroupOf(cur(),d.id,d.v||null).then(render); },
+ mRole:d=>{ Fam.admin.setRole(cur(),d.id,d.v).then(render); },
+ mDel:async d=>{ const m=memberOf(d.id); await Fam.admin.remove(cur(),d.id); ui.confirm=null; ui.stack.pop(); render(); toast((m?m.name:'Участник')+' удалён(а) из семьи'); },
+ gAdd:async()=>{ const el=document.getElementById('gNew'); const v=el?el.value.trim():''; if(!v) return; const G=Fam.groups(cur()).slice(); if(G.some(g=>g.name.toLowerCase()===v.toLowerCase())){ toast('Такая группа уже есть'); return; }
+  G.push({id:'g'+uid(),name:v.slice(0,24)}); await Fam.admin.setGroups(cur(),G); render(); const n=document.getElementById('gNew'); if(n){ n.value=''; n.focus(); } },
+ gDel:async d=>{ await Fam.admin.setGroups(cur(),Fam.groups(cur()).filter(g=>g.id!==d.id)); render(); },
+ gMem:async d=>{ const m=memberOf(d.id); await Fam.admin.setGroupOf(cur(),d.id,m&&m.group===d.v?null:d.v); render(); },
+ fnSave:async()=>{ const el=document.getElementById('fnIn'); const v=el?el.value.trim():''; if(!v) return; await Fam.admin.setName(cur(),v); ui.stack.pop(); render(); },
+ /* задачи семьи */
+ ftAdd:async()=>{ const el=document.getElementById('ftIn'); const v=el?el.value.trim():''; if(!v) return;
+  await Fam.editApp(T_KEY,st=>{ ensureT(st); st.tasks.push({id:'t'+uid(),t:v.slice(0,120),date:dkey(),time:null,rep:null,goal:null,note:'',created:Date.now(),done:false,fam:cur(),who:'all'}); });
+  render(); const n=document.getElementById('ftIn'); if(n){ n.value=''; n.focus(); } toast('Добавлено для семьи «'+Fam.famName(cur())+'»'); },
+ ftTog:async d=>{ const k=d.k||dkey(); let on=false;
+  await Fam.editApp(T_KEY,st=>{ ensureT(st); const t=st.tasks.find(x=>x.id===d.id); if(!t) return; if(t.rep){ t.doneD=t.doneD||{}; if(t.doneD[k]) delete t.doneD[k]; else { t.doneD[k]=true; on=true; } } else { t.done=!t.done; t.doneAt=t.done?dkey():null; on=t.done; } });
+  if(on) vibrate(10); render(); },
+ ftEdit:d=>{ const t=famTasks().find(x=>x.id===d.id); if(!t) return; ui.ft=clone(t); ui.confirm=null; ui.stack.push({type:'ftask',id:t.id}); render(); },
+ ftWho:d=>{ ui.ft.who=d.v; render(); },
+ ftDate:d=>{ ui.ft.date=d.v||null; render(); },
+ ftSave:async()=>{ const t=ui.ft; t.t=(t.t||'').trim(); if(!t.t) return;
+  await Fam.editApp(T_KEY,st=>{ ensureT(st); const i=st.tasks.findIndex(x=>x.id===t.id); if(i>=0) st.tasks[i]=Object.assign(st.tasks[i],{t:t.t,who:t.who||'all',date:t.date,note:t.note||''}); else st.tasks.push(Object.assign({id:'t'+uid(),time:null,rep:null,goal:null,created:Date.now(),done:false},t,{fam:cur(),who:t.who||'all'})); });
+  ui.ft=null; ui.stack.pop(); render(); },
+ ftDel:async()=>{ const id=ui.ft&&ui.ft.id; await Fam.editApp(T_KEY,st=>{ ensureT(st); st.tasks=st.tasks.filter(x=>x.id!==id); }); ui.ft=null; ui.confirm=null; ui.stack.pop(); render(); toast('Задача удалена у всей семьи'); },
+ /* покупки */
+ fsAdd:async()=>{ const el=document.getElementById('fsIn'); const v=el?el.value.trim():''; if(!v) return;
+  const dup=shopList().some(x=>!x.done&&x.n.toLowerCase()===v.toLowerCase()); if(dup){ toast('Уже в списке'); if(el) el.select(); return; }
+  await Fam.editApp(P_KEY,st=>{ ensureP(st); st.shop.push({id:'s'+uid(),n:v.slice(0,40),food:null}); }); render(); const n=document.getElementById('fsIn'); if(n){ n.value=''; n.focus(); } },
+ fsTog:async d=>{ await Fam.editApp(P_KEY,st=>{ ensureP(st); const x=st.shop.find(s=>s.id===d.id); if(x) x.done=!x.done; }); render(); },
+ fsDel:async d=>{ await Fam.editApp(P_KEY,st=>{ ensureP(st); st.shop=st.shop.filter(s=>s.id!==d.id); }); render(); },
+ fsClear:async()=>{ const n=shopList().filter(x=>x.done).length; await Fam.editApp(P_KEY,st=>{ ensureP(st); st.shop=st.shop.filter(s=>s.priv||!s.done); }); render(); toast('Убрано: '+pl(n,['покупка','покупки','покупок'])); },
+ /* деньги */
+ mOff:d=>{ ui.mOff=Number(d.v)||0; render(); },
+ budSet:d=>{ ui.bud=d.v==='0'?'':String(d.v); if(d.save) A.budSave(); else render(); },
+ budSave:async()=>{ const v=parseNum(ui.bud!=null?ui.bud:String(Fam.budget(cur())))||0; await Fam.admin.setBudget(cur(),v); ui.bud=null; ui.stack.pop(); render(); toast(v?'Бюджет семьи: '+money(v):'Бюджет семьи убран'); },
+ tokSave:()=>{ const el=document.getElementById('tokIn'); if(!Fam.setToken(cur(),el?el.value:'')){ toast('Это не похоже на ключ GitHub — он начинается с github_pat_'); return; } ui.stack.pop(); render(); toast('Ключ сохранён — синхронизирую'); }
+});
+Object.assign(C,{ meName:(d,t)=>{ const v=t.value.trim(); if(v){ Fam.setMe({name:v}); render(); } }, ftDateIn:(d,t)=>{ if(t.value){ ui.ft.date=t.value; render(); } },
+ gName:(d,t)=>{ const v=t.value.trim(); if(!v) return; Fam.admin.setGroups(cur(),Fam.groups(cur()).map(g=>g.id===d.id?{id:g.id,name:v.slice(0,24)}:g)).then(render); } });
+Object.assign(I,{ ob:(d,t)=>{ ui.ob[d.k]=t.value; if(d.k==='invite'){ const ok=!!Fam.parseInvite(t.value); if(ok!==!!ui.ob._inv){ ui.ob._inv=ok; render(); } } },
+ ft:(d,t)=>{ ui.ft[d.k]=t.value; const b=document.querySelector('[data-a="ftSave"]'); if(b) b.disabled=!ui.ft.t.trim(); },
+ bud:(d,t)=>{ ui.bud=t.value; }, tok:()=>{} });
+APP.onBack=t=>{ if(t&&t.type==='ftask'){ ui.ft=null; } if(t&&t.type==='budget') ui.bud=null; if(t&&(t.type==='addFam'||t.type==='onboard')) ui.ob=null; };
+/* перерисовка после синхронизации; не мешать набору текста */
+let famPend=false;
+function famRender(){ if(ui.booting) return; if(!hasFam()&&S&&S.setup){ S.setup=false; if(!ui.stack.some(s=>s.type==='onboard')){ ui.stack=[{type:'onboard'}]; ui.ob=null; } }
+ const ae=document.activeElement; if(ae&&/^(INPUT|TEXTAREA)$/.test(ae.tagName)){ famPend=true; return; } render(); }
+window.addEventListener('ritm-family',famRender);
+document.addEventListener('focusout',()=>{ if(famPend){ famPend=false; setTimeout(famRender,0); } });
+APP.onResume=()=>{ if(S) S.setup=hasFam(); render(); };
+
+if(typeof document!=='undefined'&&document.getElementById&&document.getElementById('view')) boot();
+</script>
+
+</body>
+</html>

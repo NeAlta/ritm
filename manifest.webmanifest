@@ -47,6 +47,10 @@
   {
    "name": "Цели",
    "url": "index.html?app=tseli"
+  },
+  {
+   "name": "Семья",
+   "url": "index.html?app=semya"
   }
  ]
 }

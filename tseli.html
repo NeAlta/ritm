@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="ritm-ios.css">
 <script>window.RITM_APP=true;window.RITM_IOS=true;window.RITM_PAGE='tseli'</script>
 <script src="ritm-ios.js"></script>
+<script src="family.js"></script>
 </head>
 <body>
 <title>Ритм·Цели</title>
@@ -390,6 +391,8 @@ body.locked .toast{top:calc(66px + env(safe-area-inset-top,0px));bottom:auto}
 .cardbtn{width:100%;text-align:left;border:none;color:inherit;font:inherit;cursor:pointer}
 .callout.cardbtn{display:flex}
 
+.gchip.fam{color:var(--muted)}
+
 </style>
 
 <main id="view" class="app"></main>
@@ -465,8 +468,23 @@ const IC={
  // семейство
  pulse:'<path d="M3 12h4l2-5 4 10 2-5h6"/>',wallet:'<path d="M4 7a2 2 0 0 1 2-2h12v4M4 7v11a2 2 0 0 0 2 2h14V9H6a2 2 0 0 1-2-2zM16 14.5h.01"/>',
  apple:'<path d="M12 7c-1.5-1.3-4-1.5-5.5 0C4.4 9 5 14 7 17.5c1.2 2 2.8 3 5 2 2.2 1 3.8 0 5-2 2-3.5 2.6-8.5.5-10.5-1.5-1.5-4-1.3-5.5 0zM12 7c0-2 1-3.5 3-4"/>',
- goal:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l7-7M16 5h3v3"/>'
+ goal:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l7-7M16 5h3v3"/>',
+ lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+ users:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1M16 3.13a4 4 0 0 1 0 7.75M22 21v-1a6 6 0 0 0-4-5.65"/>'
 };
+/* Семья (family.js в Android и iPhone): общие задачи, траты, покупки */
+function famOn(){ try{ return typeof Fam!=='undefined'&&Fam.on(); }catch(e){ return false; } }
+function famTag(id){ return famOn()&&id?' '+Fam.tag(id):''; }
+/* «Личное» или одна из семей: одна семья — переключатель «Для семьи», несколько — выбор */
+function famOf(x){ return famOn()?Fam.scopeOf(x):null; }
+function famChip(act,cur,extra=''){ if(!famOn()) return ''; const L=Fam.list(); const sc=famOf({fam:cur});
+ if(L.length===1) return `<button class="chip ichip" data-a="${act}" data-v="${sc?'':L[0].id}" ${extra} aria-pressed="${!!sc}">${ic('users',16)} Для семьи</button>`;
+ return `<button class="chip" data-a="${act}" data-v="" ${extra} aria-pressed="${!sc}">Личное</button>`+L.map(f=>`<button class="chip ichip" data-a="${act}" data-v="${f.id}" ${extra} aria-pressed="${sc===f.id}">${ic('users',16)} ${esc(f.name)}</button>`).join(''); }
+function famLabel(x){ const fid=famOf(x); return fid?(Fam.list().length>1?Fam.famName(fid):'семья'):''; }
+/* фильтр «Все · Личные · Семейные» */
+function scopeChips(act,cur){ if(!famOn()) return ''; const L=Fam.list(); const items=[['all','Все'],['me','Личные'],...(L.length>1?L.map(f=>[f.id,f.name]):[['fam','Семейные']])];
+ return items.map(([v,l])=>`<button class="chip" data-a="${act}" data-v="${esc(v)}" aria-pressed="${(cur||'all')===v}">${esc(l)}</button>`).join(''); }
+function inScope(x,sc){ if(!sc||sc==='all'||!famOn()) return true; const f=famOf(x); if(sc==='me') return !f; if(sc==='fam') return !!f; return f===sc; }
 function ic(n,s=20){ return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||IC.dots}</svg>`; }
 
 /* ---------- Семейство: цвета и данные других приложений ---------- */
@@ -724,9 +742,11 @@ const APP={id:'tseli',name:'Цели',icon:'goal',tabs:['today','goals','plan','
 function isDue(t,k){ if(!t.rep) return t.date===k; if(t.date&&k<t.date) return false; if(t.until&&k>t.until) return false; const w=wdi(k);
  switch(t.rep.k){ case 'day': return true; case 'wd': return w<5; case 'week': return w===wdi(t.date||t.created||k); case 'days': return (t.rep.days||[]).includes(w); case 'month': return pkey(k).getDate()===pkey(t.date||k).getDate(); } return false; }
 function isDone(t,k){ return t.rep?!!(t.doneD&&t.doneD[k]):!!t.done; }
-function tasksOn(k){ return S.tasks.filter(t=>isDue(t,k)); }
-function overdue(today=dkey()){ return S.tasks.filter(t=>!t.rep&&t.date&&t.date<today&&!t.done); }
-function inbox(){ return S.tasks.filter(t=>!t.rep&&!t.date&&!t.done); }
+/* семейная задача, назначенная другому участнику, видна только в Ритм·Семья */
+function mine(t){ return !t.fam||!famOn()||Fam.mine(t); }
+function tasksOn(k){ return S.tasks.filter(t=>isDue(t,k)&&mine(t)); }
+function overdue(today=dkey()){ return S.tasks.filter(t=>!t.rep&&t.date&&t.date<today&&!t.done&&mine(t)); }
+function inbox(){ return S.tasks.filter(t=>!t.rep&&!t.date&&!t.done&&mine(t)); }
 function goalOf(id){ return S.goals.find(g=>g.id===id)||null; }
 function fmtTime(t){ return t?t:''; }
 function sortTasks(L,k){ return [...L].sort((a,b)=>{ const da=isDone(a,k), db=isDone(b,k); if(da!==db) return da?1:-1; if((a.time||'99')!==(b.time||'99')) return (a.time||'99')<(b.time||'99')?-1:1; return (a.created||0)-(b.created||0); }); }
@@ -787,7 +807,7 @@ function goalReminders(){ const R=Object.assign({morning:true,mtime:'09:00',lead
 
 /* ============ Ритм·Цели — вкладки ============ */
 function taskRow(t,k,opts={}){ const done=isDone(t,k); const g=t.goal?goalOf(t.goal):null; const pop=ui.pop===t.id+k;
- const meta=[opts.showDate&&t.date?`<span class="${t.date<dkey()&&!done?'bad-t b':''}">${relDay(t.date)}</span>`:'',t.time?ic('clock',13)+' '+t.time:'',t.rep?ic('repeat',13)+' '+REP[t.rep.k].toLowerCase():'',g?`<span class="gchip">${ic(GCATS[g.cat]?GCATS[g.cat][1]:'target',12)} ${esc(g.n)}</span>`:''].filter(Boolean).join('<span class="sep">·</span>');
+ const meta=[opts.showDate&&t.date?`<span class="${t.date<dkey()&&!done?'bad-t b':''}">${relDay(t.date)}</span>`:'',t.time?ic('clock',13)+' '+t.time:'',t.rep?ic('repeat',13)+' '+REP[t.rep.k].toLowerCase():'',famOf(t)?`<span class="gchip fam">${ic('users',12)} ${esc(famLabel(t))}${t.who&&t.who!=='all'?' · '+esc(Fam.whoLabel(t)):''}</span>`:'',g?`<span class="gchip">${ic(GCATS[g.cat]?GCATS[g.cat][1]:'target',12)} ${esc(g.n)}</span>`:''].filter(Boolean).join('<span class="sep">·</span>');
  return `<div class="trow${done?' is-done':''}"><button class="chk-hit" data-a="tTog" data-id="${t.id}" data-k="${k}" aria-pressed="${done}" aria-label="${done?'Снять отметку':'Готово'}: ${esc(t.t)}"><span class="chk${done?' on':''}${pop?' pop':''}">${ic('check',18)}</span></button><button class="tmain" data-a="tEdit" data-id="${t.id}"><span class="tt${done?' done-t':''}">${esc(t.t)}</span>${meta?`<span class="tmeta">${meta}</span>`:''}</button>${opts.move&&!done?`<button class="ibtn sm ghostb" data-a="tMove" data-id="${t.id}" aria-label="Перенести на завтра" title="На завтра">${ic('arrowR',18)}</button>`:''}</div>`; }
 function habitRow(g,k){ const done=!!(hd(g,k)); const w=habitWeek(g,k);
  return `<div class="trow${done?' is-done':''}"><button class="chk-hit" data-a="hTog" data-id="${g.id}" data-k="${k}" aria-pressed="${done}" aria-label="Привычка ${esc(g.n)}"><span class="chk round${done?' on':''}${ui.pop===g.id+k?' pop':''}">${ic('check',18)}</span></button><button class="tmain" data-a="push" data-s="goal" data-id="${g.id}"><span class="tt${done?' done-t':''}">${esc(g.n)}</span><span class="tmeta"><span class="gchip">${ic('fire',12)} привычка</span><span class="sep">·</span>${g.per==='day'?`${w.n} из 7 на неделе`:`${w.n} из ${g.times} на неделе`}</span></button></div>`; }
@@ -795,7 +815,7 @@ function linkRow(x){ return `<div class="trow${x.done?' is-done':''}"><span clas
 function goalRing(g,size=64){ const f=goalFrac(g); const lbl=g.kind==='steps'?`${goalCur(g)}/${goalTotal(g)}`:Math.round(f*100)+'%'; return ring(f,size,size>60?7:6,lbl,f>=1?'good':''); }
 
 /* ---------- Сегодня ---------- */
-VIEWS.today=()=>{ const k=dkey(); const own=tasksOn(k); const habits=S.goals.filter(g=>habitDueToday(g,k)); const links=linkedTasks(k); const od=overdue(k);
+VIEWS.today=()=>{ const k=dkey(); const sc=ui.tsc||'all'; const own=tasksOn(k).filter(t=>inScope(t,sc)); const habits=S.goals.filter(g=>habitDueToday(g,k)); const links=linkedTasks(k); const od=overdue(k);
  const total=own.length+habits.length+links.length; const done=own.filter(t=>isDone(t,k)).length+habits.filter(g=>hd(g,k)).length+links.filter(x=>x.done).length;
  let h=topBar()+`<div class="today-h"><div class="col-xs grow"><span class="lede">${esc(fmtLong(k))}</span><h1 class="h1">Сегодня</h1>${total?`<span class="note">${done} из ${total} готово${done===total?' — отличный день!':''}</span>`:''}</div>${total?ring(done/total,64,7,`${done}/${total}`,done===total?'good':''):''}</div>`;
  const pins=S.goals.filter(g=>!g.done&&g.pinned!==false);
@@ -804,7 +824,8 @@ VIEWS.today=()=>{ const k=dkey(); const own=tasksOn(k); const habits=S.goals.fil
  if(S.tasks.some(x=>x.time)) h+=remindPrompt();
  if(od.length) h+=`<section class="col-s"><div class="between"><h2 class="sec-h bad-t">Просрочено · ${od.length}</h2><button class="btn ghost sm" data-a="odToday">Всё на сегодня</button></div><div class="tlist">${sortTasks(od,k).map(t=>taskRow(t,k,{showDate:true})).join('')}</div></section>`;
  const L=[...sortTasks(own,k).map(t=>({d:isDone(t,k),h:taskRow(t,k,{move:true})})),...habits.map(g=>({d:!!(hd(g,k)),h:habitRow(g,k)})),...links.map(x=>({d:x.done,h:linkRow(x)}))].sort((a,b)=>a.d-b.d);
- h+=`<section class="col-s"><h2 class="sec-h">Задачи</h2><div class="tlist">${L.map(x=>x.h).join('')||`<div class="empty sm"><p class="p">На сегодня задач нет. Добавьте первую — например, «позвонить маме в 19:00».</p></div>`}</div></section>`;
+ const hasFamT=famOn()&&S.tasks.some(t=>famOf(t));
+ h+=`<section class="col-s"><div class="between"><h2 class="sec-h">Задачи</h2>${hasFamT?`<span class="note">${own.filter(t=>!famOf(t)).length} личных · ${own.filter(t=>famOf(t)).length} семейных</span>`:''}</div>${hasFamT?`<div class="scroller">${scopeChips('tScope',sc)}</div>`:''}<div class="tlist">${L.map(x=>x.h).join('')||`<div class="empty sm"><p class="p">На сегодня задач нет. Добавьте первую — например, «позвонить маме в 19:00».</p></div>`}</div></section>`;
  h+=quickAdd(k);
  const ib=inbox(); if(ib.length) h+=`<button class="btn ghost sm self-start" data-a="tab" data-t="plan">${ic('inbox',16)} Без даты: ${ib.length}</button>`;
  return `<div class="col">${h}</div>`; };
@@ -870,6 +891,11 @@ SH.task=top=>{ const t=ui.te; if(!t) return sheet({title:'',body:''}); const tod
  b+=`<div class="col-xs"><span class="lbl">Повтор</span><div class="chips">${[['','Не повторять'],...Object.entries(REP)].map(([k,l])=>`<button class="chip" data-a="teRep" data-v="${k}" aria-pressed="${(t.rep?t.rep.k:'')===k}">${l}</button>`).join('')}</div>${t.rep&&t.rep.k==='days'?`<div class="wdays">${WD.map((l,i)=>`<button class="chip" data-a="teDay" data-v="${i}" aria-pressed="${(t.rep.days||[]).includes(i)}">${l}</button>`).join('')}</div>`:''}</div>`;
  const gs=S.goals.filter(g=>!g.done&&g.kind!=='habit');
  if(gs.length) b+=`<div class="col-xs"><span class="lbl">Цель</span><div class="chips"><button class="chip" data-a="teGoal" data-v="" aria-pressed="${!t.goal}">Без цели</button>${gs.map(g=>`<button class="chip ichip" data-a="teGoal" data-v="${g.id}" aria-pressed="${t.goal===g.id}">${ic(GCATS[g.cat]?GCATS[g.cat][1]:'target',14)} ${esc(g.n)}</button>`).join('')}</div></div>`;
+ if(famOn()){ const L=Fam.list(); const fid=famOf(t);
+  b+=`<div class="col-xs"><span class="lbl">Чья задача</span><div class="chips"><button class="chip" data-a="teFam" data-v="" aria-pressed="${!fid}">Личная</button>${L.map(f=>`<button class="chip ichip" data-a="teFam" data-v="${f.id}" aria-pressed="${fid===f.id}">${ic('users',14)} ${L.length>1?esc(f.name):'Для семьи'}</button>`).join('')}</div>`;
+  if(fid){ const M=Fam.members(fid), G=Fam.groups(fid); const who=t.who||'all';
+   b+=`<span class="lbl">Кто сделает</span><div class="chips"><button class="chip" data-a="teWho" data-v="all" aria-pressed="${who==='all'}">Любой</button>${G.map(g=>`<button class="chip" data-a="teWho" data-v="g:${g.id}" aria-pressed="${who==='g:'+g.id}">${esc(g.name)}</button>`).join('')}${M.map(m=>`<button class="chip ichip" data-a="teWho" data-v="${m.id}" aria-pressed="${who===m.id}"><i style="background:${esc(m.color)};width:10px;height:10px;border-radius:50%;display:inline-block"></i> ${m.me?'Я':esc(m.name)}</button>`).join('')}</div><span class="note">Задачу увидит семья «${esc(Fam.famName(fid))}» — в Целях и в Ритм·Семья.</span>`; }
+  b+=`</div>`; }
  b+=`<label class="fld"><span class="lbl">Заметка</span><textarea class="inp" id="tn" rows="3" data-i="te" data-k="note" placeholder="Подробности, ссылки, адрес">${esc(t.note||'')}</textarea></label>`;
  if(!isNew) b+=ui.confirm==='tdel'?confirmBox(t.rep?'Удалить повторяющуюся задачу целиком?':'Удалить задачу?','tDel'):`<button class="btn ghost danger-t self-start" data-a="ask" data-v="tdel" style="padding:0">${ic('trash',16)} Удалить задачу</button>`;
  return sheet({title:isNew?'Новая задача':'Задача',left:'close',body:b,foot:`<button class="btn pri blk" data-a="teSave"${t.t.trim()?'':' disabled'}>${isNew?'Добавить':'Сохранить'}</button>`}); };
@@ -936,6 +962,9 @@ Object.assign(A,{
  teRep:d=>{ const t=ui.te; if(!d.v) t.rep=null; else { if(!t.date) t.date=dkey(); t.rep={k:d.v,days:d.v==='days'?[wdi(t.date)]:[]}; } render(); },
  teDay:d=>{ const r=ui.te.rep; const i=Number(d.v); r.days=r.days.includes(i)?r.days.filter(x=>x!==i):[...r.days,i].sort(); if(!r.days.length) r.days=[i]; render(); },
  teGoal:d=>{ ui.te.goal=d.v||null; render(); },
+ teFam:d=>{ const t=ui.te; if(!d.v){ delete t.fam; delete t.who; } else { if(t.fam!==d.v) t.who='all'; t.fam=d.v; } render(); },
+ teWho:d=>{ ui.te.who=d.v; render(); },
+ tScope:d=>{ ui.tsc=d.v; render(); },
  teSave:()=>{ const t=ui.te; t.t=(t.t||'').trim(); if(!t.t) return; if(t.rep&&!t.date) t.date=dkey();
   if(t.id){ const i=S.tasks.findIndex(x=>x.id===t.id); if(i>=0) S.tasks[i]=t; } else { t.id='t'+uid(); t.created=Date.now(); t.done=false; S.tasks.push(t); }
   const isNew=topSheet().id==='new'; ui.te=null; ui.stack.pop(); commit(); if(isNew) toast(`Добавлено: ${t.date?relDay(t.date).toLowerCase():'без даты'}${t.time?', '+t.time:''}`); },

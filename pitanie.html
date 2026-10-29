@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="ritm-ios.css">
 <script>window.RITM_APP=true;window.RITM_IOS=true;window.RITM_PAGE='pit'</script>
 <script src="ritm-ios.js"></script>
+<script src="family.js"></script>
 </head>
 <body>
 <title>Ритм·Питание</title>
@@ -458,8 +459,23 @@ const IC={
  // семейство
  pulse:'<path d="M3 12h4l2-5 4 10 2-5h6"/>',wallet:'<path d="M4 7a2 2 0 0 1 2-2h12v4M4 7v11a2 2 0 0 0 2 2h14V9H6a2 2 0 0 1-2-2zM16 14.5h.01"/>',
  apple:'<path d="M12 7c-1.5-1.3-4-1.5-5.5 0C4.4 9 5 14 7 17.5c1.2 2 2.8 3 5 2 2.2 1 3.8 0 5-2 2-3.5 2.6-8.5.5-10.5-1.5-1.5-4-1.3-5.5 0zM12 7c0-2 1-3.5 3-4"/>',
- goal:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l7-7M16 5h3v3"/>'
+ goal:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l7-7M16 5h3v3"/>',
+ lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+ users:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1M16 3.13a4 4 0 0 1 0 7.75M22 21v-1a6 6 0 0 0-4-5.65"/>'
 };
+/* Семья (family.js в Android и iPhone): общие задачи, траты, покупки */
+function famOn(){ try{ return typeof Fam!=='undefined'&&Fam.on(); }catch(e){ return false; } }
+function famTag(id){ return famOn()&&id?' '+Fam.tag(id):''; }
+/* «Личное» или одна из семей: одна семья — переключатель «Для семьи», несколько — выбор */
+function famOf(x){ return famOn()?Fam.scopeOf(x):null; }
+function famChip(act,cur,extra=''){ if(!famOn()) return ''; const L=Fam.list(); const sc=famOf({fam:cur});
+ if(L.length===1) return `<button class="chip ichip" data-a="${act}" data-v="${sc?'':L[0].id}" ${extra} aria-pressed="${!!sc}">${ic('users',16)} Для семьи</button>`;
+ return `<button class="chip" data-a="${act}" data-v="" ${extra} aria-pressed="${!sc}">Личное</button>`+L.map(f=>`<button class="chip ichip" data-a="${act}" data-v="${f.id}" ${extra} aria-pressed="${sc===f.id}">${ic('users',16)} ${esc(f.name)}</button>`).join(''); }
+function famLabel(x){ const fid=famOf(x); return fid?(Fam.list().length>1?Fam.famName(fid):'семья'):''; }
+/* фильтр «Все · Личные · Семейные» */
+function scopeChips(act,cur){ if(!famOn()) return ''; const L=Fam.list(); const items=[['all','Все'],['me','Личные'],...(L.length>1?L.map(f=>[f.id,f.name]):[['fam','Семейные']])];
+ return items.map(([v,l])=>`<button class="chip" data-a="${act}" data-v="${esc(v)}" aria-pressed="${(cur||'all')===v}">${esc(l)}</button>`).join(''); }
+function inScope(x,sc){ if(!sc||sc==='all'||!famOn()) return true; const f=famOf(x); if(sc==='me') return !f; if(sc==='fam') return !!f; return f===sc; }
 function ic(n,s=20){ return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||IC.dots}</svg>`; }
 
 /* ---------- Семейство: цвета и данные других приложений ---------- */
@@ -998,11 +1014,13 @@ VIEWS.home=()=>{ const pl_=ui.place||'all'; const t=dkey();
  // покупки
  const sh=S.shop; const done=sh.filter(x=>x.done);
  h+=`<section class="card col-s" id="shop"><div class="between"><h2 class="sec-h">${ic('cart',18)} Купить</h2>${sh.length?`<span class="note">${sh.length-done.length} из ${sh.length}</span>`:''}</div>
-  <div class="addrow"><input class="inp sm" id="shopIn" type="text" placeholder="Добавить в список" maxlength="40" data-enter="shopAdd" enterkeyhint="done" autocomplete="off"><button class="ibtn acc" data-a="shopAdd" aria-label="Добавить в список">${ic('plus',20)}</button></div>
-  ${sh.length?`<div class="col-xs">${sh.map(x=>`<div class="shrow"><button class="chk-hit" data-a="shopTog" data-id="${x.id}" aria-pressed="${!!x.done}" aria-label="Куплено: ${esc(x.n)}"><span class="chk${x.done?' on':''}">${ic('check',18)}</span></button><span class="grow${x.done?' done-t':''}">${esc(x.n)}${x.qty?` <span class="mut">· ${esc(x.qty)}</span>`:''}</span><button class="ibtn sm ghostb" data-a="shopDel" data-id="${x.id}" aria-label="Убрать из списка">${ic('close',16)}</button></div>`).join('')}</div>`:'<p class="note">Список пуст. Закончившийся продукт отправляется сюда одной кнопкой.</p>'}
+  <div class="addrow"><input class="inp sm" id="shopIn" type="text" placeholder="${ui.shopPriv?'Только для меня':'Добавить в список'}" maxlength="40" data-enter="shopAdd" enterkeyhint="done" autocomplete="off">${famShop()?`<button class="ibtn${ui.shopPriv?' acc':''}" data-a="shopPriv" aria-pressed="${!!ui.shopPriv}" aria-label="Только мне — не показывать семье" title="Только мне">${ic('lock',18)}</button>`:''}<button class="ibtn acc" data-a="shopAdd" aria-label="Добавить в список">${ic('plus',20)}</button></div>${famShop()?`<p class="note">${ui.shopPriv?ic('lock',13)+' Следующая покупка — только для вас, семья её не увидит.':'Список общий с семьёй «'+esc(Fam.famName(Fam.pitFam()))+'». '+ic('lock',13)+' — купить что-то только для себя.'}</p>`:''}
+  ${sh.length?`<div class="col-xs">${sh.map(x=>`<div class="shrow"><button class="chk-hit" data-a="shopTog" data-id="${x.id}" aria-pressed="${!!x.done}" aria-label="Куплено: ${esc(x.n)}"><span class="chk${x.done?' on':''}">${ic('check',18)}</span></button><span class="grow${x.done?' done-t':''}">${esc(x.n)}${x.qty?` <span class="mut">· ${esc(x.qty)}</span>`:''}${famTag(x.fa)}${x.priv&&famShop()?' <span class="fsc">'+ic('lock',12)+' только мне</span>':''}</span><button class="ibtn sm ghostb" data-a="shopDel" data-id="${x.id}" aria-label="Убрать из списка">${ic('close',16)}</button></div>`).join('')}</div>`:'<p class="note">Список пуст. Закончившийся продукт отправляется сюда одной кнопкой.</p>'}
   ${done.length?`<button class="btn pri blk" data-a="shopStore">Разложить купленное дома (${done.length})</button>`:''}</section>`;
  return `<div class="col">${h}</div>`; };
-function homeRow(it){ const lvl=it.full?clamp(toGrams(it)/it.full,0,1):null; return `<div class="li hrow"><button class="li-m" data-a="push" data-s="hitem" data-id="${it.id}" style="background:none;border:none;padding:0;text-align:left;color:inherit"><span class="li-t">${esc(it.n)}</span><span class="li-s">${qtyText(it)}${it.exp?' · '+expLabel(it):''} · ${PLACES[it.place]?PLACES[it.place][0].toLowerCase():''}</span>${lvl!=null?`<span class="lvl"><i style="width:${(lvl*100).toFixed(0)}%"></i></span>`:''}</button><button class="btn ghost sm" data-a="homeOut" data-id="${it.id}" title="Закончилось — в покупки">Кончилось</button></div>`; }
+/* покупки и продукты дома общие с «домашней» семьёй */
+function famShop(){ return famOn()&&!!Fam.pitFam(); }
+function homeRow(it){ const lvl=it.full?clamp(toGrams(it)/it.full,0,1):null; return `<div class="li hrow"><button class="li-m" data-a="push" data-s="hitem" data-id="${it.id}" style="background:none;border:none;padding:0;text-align:left;color:inherit"><span class="li-t">${esc(it.n)}</span><span class="li-s">${qtyText(it)}${it.exp?' · '+expLabel(it):''} · ${PLACES[it.place]?PLACES[it.place][0].toLowerCase():''}${famTag(it.fa)}</span>${lvl!=null?`<span class="lvl"><i style="width:${(lvl*100).toFixed(0)}%"></i></span>`:''}</button><button class="btn ghost sm" data-a="homeOut" data-id="${it.id}" title="Закончилось — в покупки">Кончилось</button></div>`; }
 
 /* ---------- Рецепты ---------- */
 VIEWS.rec=()=>{ const f=ui.rf||'all'; const q=norm(ui.rq||'');
@@ -1195,7 +1213,8 @@ Object.assign(A,{
  homeOut:d=>{ const it=S.home.find(x=>x.id===d.id); if(!it) return; const before=clone(S.home), sb=clone(S.shop); S.home=S.home.filter(x=>x.id!==it.id); if(!S.shop.some(x=>norm(x.n)===norm(it.n)&&!x.done)) S.shop.push({id:'s'+uid(),n:it.n,food:it.food}); const t=topSheet(); if(t&&t.type==='hitem') ui.stack.pop(); commit(); toast(`${it.n} — в списке покупок`,()=>{ S.home=before; S.shop=sb; commit(); }); },
  homeEat:d=>{ const it=S.home.find(x=>x.id===d.id); if(!it||!food(it.food)){ toast('Для этого продукта нет состава — уменьшите количество'); return; } const f=food(it.food); ui.add=null; ui.amt={f:f.id,meal:mealOfNow(),mode:'log',wo:it.id}; ui.kp={v:fmtIn(f.por[0]?f.por[0].g:100)}; ui.stack.push({type:'amount',id:f.id}); render(); },
  homeDel:d=>{ S.home=S.home.filter(x=>x.id!==d.id); ui.stack.pop(); commit(); },
- shopAdd:()=>{ const el=document.getElementById('shopIn'); const v=el?el.value.trim():''; if(!v) return; const m=searchFoods(v,1)[0]; S.shop.unshift({id:'s'+uid(),n:v.slice(0,40),food:m&&norm(m.n).startsWith(norm(v))?m.id:null}); commit(); const n=document.getElementById('shopIn'); if(n){ n.value=''; n.focus(); } },
+ shopAdd:()=>{ const el=document.getElementById('shopIn'); const v=el?el.value.trim():''; if(!v) return; const m=searchFoods(v,1)[0]; const it={id:'s'+uid(),n:v.slice(0,40),food:m&&norm(m.n).startsWith(norm(v))?m.id:null}; if(ui.shopPriv&&famShop()){ it.priv=true; ui.shopPriv=false; } S.shop.unshift(it); commit(); const n=document.getElementById('shopIn'); if(n){ n.value=''; n.focus(); } },
+ shopPriv:()=>{ ui.shopPriv=!ui.shopPriv; render(); const el=document.getElementById('shopIn'); if(el) el.focus(); },
  shopTog:d=>{ const x=S.shop.find(s=>s.id===d.id); if(x){ x.done=!x.done; vibrate(8); commit(); } },
  shopDel:d=>{ S.shop=S.shop.filter(s=>s.id!==d.id); commit(); },
  shopStore:()=>{ const done=S.shop.filter(x=>x.done); for(const x of done){ const f=food(x.food)||searchFoods(x.n,1).find(m=>norm(m.n).startsWith(norm(x.n).split(' ')[0])); const unit=f&&f.por.some(p=>/^шт/.test(p.l))?'шт':'г'; const qty=unit==='шт'?1:(f&&f.por[0]?Math.max(100,f.por[0].g):500);

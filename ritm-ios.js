@@ -7,8 +7,9 @@ var APPS=[
  {id:'telo',page:'telo.html',n:'Тело',d:'Тренировки, активность, восстановление',c:'#F0643C',g:'M2.4 12H6.67L8.8 6.67L13.07 17.33L15.2 12H21.6'},
  {id:'dengi',page:'dengi.html',n:'Деньги',d:'Бюджет месяца, платежи, копилки',c:'#2FA36B',g:'M4 7a2 2 0 0 1 2-2h12v4M4 7v11a2 2 0 0 0 2 2h14V9H6a2 2 0 0 1-2-2zM16 14.5h.01'},
  {id:'pit',page:'pitanie.html',n:'Питание',d:'Калории, нутриенты, продукты дома',c:'#F2B33D',g:'M12 7c-1.5-1.3-4-1.5-5.5 0C4.4 9 5 14 7 17.5c1.2 2 2.8 3 5 2 2.2 1 3.8 0 5-2 2-3.5 2.6-8.5.5-10.5-1.5-1.5-4-1.3-5.5 0zM12 7c0-2 1-3.5 3-4'},
- {id:'tseli',page:'tseli.html',n:'Цели',d:'Цели, задачи на день, привычки',c:'#6E63F2',g:'M12 3a9 9 0 1 0 0.01 0zM12 7a5 5 0 1 0 0.01 0zM12 12l7-7M16 5h3v3'}];
-var ALIAS={pitanie:'pit',pit:'pit',telo:'telo',dengi:'dengi',tseli:'tseli'};
+ {id:'tseli',page:'tseli.html',n:'Цели',d:'Цели, задачи на день, привычки',c:'#6E63F2',g:'M12 3a9 9 0 1 0 0.01 0zM12 7a5 5 0 1 0 0.01 0zM12 12l7-7M16 5h3v3'},
+ {id:'semya',page:'semya.html',n:'Семья',d:'Общие покупки, дела и траты семьи',c:'#E5577F',g:'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1M16 3.13a4 4 0 0 1 0 7.75M22 21v-1a6 6 0 0 0-4-5.65'}];
+var ALIAS={pitanie:'pit',pit:'pit',telo:'telo',dengi:'dengi',tseli:'tseli',semya:'semya',fam:'semya'};
 var cur=window.RITM_PAGE||'';
 function byId(id){ id=ALIAS[id]||id; for(var i=0;i<APPS.length;i++) if(APPS[i].id===id) return APPS[i]; return null; }
 function remember(id){ try{ localStorage.setItem('ritm-ios-last',id); }catch(e){} }
@@ -23,7 +24,7 @@ function go(id){ var a=byId(id); if(!a) return false; closeMenu(); if(a.id===cur
  try{ window.dispatchEvent(new Event('ritm-pause')); }catch(e){}
  setTimeout(function(){ location.replace(a.page); },40); return true; }
 
-var bridge={ version:function(){ return 'ios-pwa'; }, open:function(id){ return go(id); } };
+var bridge={ version:function(){ return 'ios-pwa'; }, open:function(id){ return go(id); }, openUrl:function(u){ if(/^https:\/\//.test(String(u))) window.open(u,'_blank','noopener'); } };
 if(navigator.share) bridge.share=function(text,title){ try{ var p=navigator.share({title:title||'Ритм',text:text}); if(p&&p.catch) p.catch(function(){}); return true; }catch(e){ return false; } };
 window.RitmNative=bridge;
 

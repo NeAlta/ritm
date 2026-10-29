@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="ritm-ios.css">
 <script>window.RITM_APP=true;window.RITM_IOS=true;window.RITM_PAGE='dengi'</script>
 <script src="ritm-ios.js"></script>
+<script src="family.js"></script>
 </head>
 <body>
 <title>Ритм·Деньги</title>
@@ -369,6 +370,11 @@ body.locked .toast{top:calc(66px + env(safe-area-inset-top,0px));bottom:auto}
 .imsel{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:4px 10px;font-size:13px;max-width:180px}
 .cues{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
 
+.pbar2{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--sunk)}
+.pbar2.sm{height:6px;border-radius:3px}
+.pbar2 i{display:block;height:100%}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex-shrink:0}
+
 </style>
 
 <main id="view" class="app"></main>
@@ -444,8 +450,23 @@ const IC={
  // семейство
  pulse:'<path d="M3 12h4l2-5 4 10 2-5h6"/>',wallet:'<path d="M4 7a2 2 0 0 1 2-2h12v4M4 7v11a2 2 0 0 0 2 2h14V9H6a2 2 0 0 1-2-2zM16 14.5h.01"/>',
  apple:'<path d="M12 7c-1.5-1.3-4-1.5-5.5 0C4.4 9 5 14 7 17.5c1.2 2 2.8 3 5 2 2.2 1 3.8 0 5-2 2-3.5 2.6-8.5.5-10.5-1.5-1.5-4-1.3-5.5 0zM12 7c0-2 1-3.5 3-4"/>',
- goal:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l7-7M16 5h3v3"/>'
+ goal:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12l7-7M16 5h3v3"/>',
+ lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
+ users:'<path d="M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM2 21v-1a6 6 0 0 1 6-6h2a6 6 0 0 1 6 6v1M16 3.13a4 4 0 0 1 0 7.75M22 21v-1a6 6 0 0 0-4-5.65"/>'
 };
+/* Семья (family.js в Android и iPhone): общие задачи, траты, покупки */
+function famOn(){ try{ return typeof Fam!=='undefined'&&Fam.on(); }catch(e){ return false; } }
+function famTag(id){ return famOn()&&id?' '+Fam.tag(id):''; }
+/* «Личное» или одна из семей: одна семья — переключатель «Для семьи», несколько — выбор */
+function famOf(x){ return famOn()?Fam.scopeOf(x):null; }
+function famChip(act,cur,extra=''){ if(!famOn()) return ''; const L=Fam.list(); const sc=famOf({fam:cur});
+ if(L.length===1) return `<button class="chip ichip" data-a="${act}" data-v="${sc?'':L[0].id}" ${extra} aria-pressed="${!!sc}">${ic('users',16)} Для семьи</button>`;
+ return `<button class="chip" data-a="${act}" data-v="" ${extra} aria-pressed="${!sc}">Личное</button>`+L.map(f=>`<button class="chip ichip" data-a="${act}" data-v="${f.id}" ${extra} aria-pressed="${sc===f.id}">${ic('users',16)} ${esc(f.name)}</button>`).join(''); }
+function famLabel(x){ const fid=famOf(x); return fid?(Fam.list().length>1?Fam.famName(fid):'семья'):''; }
+/* фильтр «Все · Личные · Семейные» */
+function scopeChips(act,cur){ if(!famOn()) return ''; const L=Fam.list(); const items=[['all','Все'],['me','Личные'],...(L.length>1?L.map(f=>[f.id,f.name]):[['fam','Семейные']])];
+ return items.map(([v,l])=>`<button class="chip" data-a="${act}" data-v="${esc(v)}" aria-pressed="${(cur||'all')===v}">${esc(l)}</button>`).join(''); }
+function inScope(x,sc){ if(!sc||sc==='all'||!famOn()) return true; const f=famOf(x); if(sc==='me') return !f; if(sc==='fam') return !!f; return f===sc; }
 function ic(n,s=20){ return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[n]||IC.dots}</svg>`; }
 
 /* ---------- Семейство: цвета и данные других приложений ---------- */
@@ -704,7 +725,7 @@ function DEF(){ return {v:1,setup:false,theme:'auto',budget:300000,pstart:1,plan
  accs:[{id:'card',n:'Карта',kind:'card',start:0},{id:'cash',n:'Наличные',kind:'cash',start:0}],
  cats:[...DEF_EXP.map(([id,n,ic,p])=>({id,n,ic,lim:round1000(300000*p/100),kind:'exp',pct:p})),...DEF_INC.map(([id,n,ic])=>({id,n,ic,kind:'inc'}))],
  jars:[],pays:[],last:{exp:'food',inc:'salary',acc:'card'},use:{}}; }
-function normalize(s){ const o=Object.assign(DEF(),s||{}); for(const k of ['accs','cats','jars','pays']) if(!Array.isArray(o[k])) o[k]=DEF()[k]; if(!o.accs.length) o.accs=DEF().accs; if(!o.last||typeof o.last!=='object') o.last=DEF().last; if(!o.use||typeof o.use!=='object') o.use={}; o.pstart=clamp(Math.round(o.pstart||1),1,28); if(!o.merch||typeof o.merch!=='object') o.merch={}; return o; }
+function normalize(s){ const o=Object.assign(DEF(),s||{}); for(const k of ['accs','cats','jars','pays']) if(!Array.isArray(o[k])) o[k]=DEF()[k]; if(!o.accs.length) o.accs=DEF().accs; if(!o.last||typeof o.last!=='object') o.last=DEF().last; if(!o.use||typeof o.use!=='object') o.use={}; o.pstart=clamp(Math.round(o.pstart||1),1,28); if(!o.merch||typeof o.merch!=='object') o.merch={}; if(!o.famCat||typeof o.famCat!=='object') o.famCat={}; return o; }
 const APP={id:'dengi',name:'Деньги',icon:'wallet',tabs:['home','ops','pays','rep'],normalize,
  fab:t=>t==='home'||t==='ops',
  remindWhy:'Ритм напомнит о платеже утром в день оплаты.',
@@ -762,12 +783,12 @@ function moneyReminders(){ const t=dkey(), to=addDays(t,14), tm=(S.remind&&S.rem
 function perNav(){ const p=periodOf(ui.per), c=curPeriod(); return `<div class="mnav"><button class="ibtn" data-a="perShift" data-v="-1" aria-label="Предыдущий месяц">${ic('left',18)}</button><button class="mnav-t btn ghost" data-a="perNow" style="padding:0 4px;color:var(--ink)">${esc(p.label)}</button><button class="ibtn" data-a="perShift" data-v="1" aria-label="Следующий месяц"${p.from>=c.from?' disabled':''}>${ic('right',18)}</button></div>`; }
 function catIco(c,sm){ return `<span class="ico${sm?' sm':''}">${ic(c.ic||'more',sm?16:20)}</span>`; }
 function opRow(o){ const c=o.t==='tr'?null:catOf(o.cat); const title=o.t==='tr'?`${accOf(o.acc).n} → ${accOf(o.to).n}`:c.n;
- const sub=[o.note,o.t==='tr'?'Перевод':accOf(o.acc).n].filter(Boolean).join(' · ');
+ const sub=[o.note,o.t==='tr'?'Перевод':accOf(o.acc).n,famLabel(o)].filter(Boolean).join(' · ');
  const v=o.t==='exp'?money(-o.sum):o.t==='inc'?money(o.sum,true):money(o.sum);
  return `<button class="li" data-a="opEdit" data-id="${o.id}"><span class="ico${o.t==='tr'?' mut':''}">${ic(o.t==='tr'?'swap':c.ic,20)}</span><span class="li-m"><span class="li-t">${esc(title)}</span><span class="li-s">${esc(sub)}</span></span><span class="li-e${o.t==='inc'?' good-t':''}">${v}</span></button>`; }
 function payRow(p,act=true){ const t=dkey(); const od=p.next<t; const n=dBetween(t,p.next);
  const when=od?`<span class="bad-t b">просрочен с ${fmtDay(p.next)}</span>`:n===0?'<span class="acc-t b">сегодня</span>':n===1?'завтра':`${relDay(p.next)}`;
- return `<div class="li"><span class="ico${od?'':' mut'}">${ic(catOf(p.cat).ic,20)}</span><button class="li-m" data-a="push" data-s="pay" data-id="${p.id}" style="background:none;border:none;padding:0;text-align:left;color:inherit"><span class="li-t">${esc(p.n)}</span><span class="li-s">${when} · ${money(p.sum)}</span></button>${act?`<button class="btn ${od||n<=0?'acc':'sec'} sm" data-a="payDo" data-id="${p.id}">Оплачено</button>`:''}</div>`; }
+ return `<div class="li"><span class="ico${od?'':' mut'}">${ic(catOf(p.cat).ic,20)}</span><button class="li-m" data-a="push" data-s="pay" data-id="${p.id}" style="background:none;border:none;padding:0;text-align:left;color:inherit"><span class="li-t">${esc(p.n)}</span><span class="li-s">${when} · ${money(p.sum)}${famOf(p)?' · '+esc(famLabel(p)):''}</span>${p.fa&&famOn()?`<span>${Fam.tag(p.fa)}</span>`:''}</button>${act?`<button class="btn ${od||n<=0?'acc':'sec'} sm" data-a="payDo" data-id="${p.id}">Оплачено</button>`:''}</div>`; }
 
 /* ---------- Обзор ---------- */
 VIEWS.home=()=>{ const p=periodOf(ui.per); const st=budgetStats(p); const t=dkey();
@@ -791,14 +812,14 @@ VIEWS.home=()=>{ const p=periodOf(ui.per); const st=budgetStats(p); const t=dkey
  return `<div class="col">${h}</div>`; };
 
 /* ---------- Операции ---------- */
-VIEWS.ops=()=>{ const p=periodOf(ui.per); const f=ui.opf||(ui.opf={t:'all',cat:'',q:''});
- let L=opsIn(p); if(f.t!=='all') L=L.filter(o=>o.t===f.t); if(f.cat) L=L.filter(o=>o.cat===f.cat);
+VIEWS.ops=()=>{ const p=periodOf(ui.per); const f=ui.opf||(ui.opf={t:'all',cat:'',q:'',s:'all'});
+ let L=opsIn(p); if(f.t!=='all') L=L.filter(o=>o.t===f.t); if(f.s&&f.s!=='all') L=L.filter(o=>o.t==='exp'&&inScope(o,f.s)); if(f.cat) L=L.filter(o=>o.cat===f.cat);
  const q=(f.q||'').trim().toLowerCase(); if(q) L=L.filter(o=>(o.note||'').toLowerCase().includes(q)||(o.t!=='tr'&&catOf(o.cat).n.toLowerCase().includes(q))||String(o.sum).includes(q));
  let h=topBar()+`<div class="between"><h1 class="h1">Операции</h1>${perNav()}</div>`;
  const ex=sum(L.filter(o=>o.t==='exp'),o=>o.sum), inc=sum(L.filter(o=>o.t==='inc'),o=>o.sum);
  h+=`<div class="stats s2"><div class="stat"><span class="stat-v">${money(ex)}</span><span class="stat-l">расходы</span></div><div class="stat"><span class="stat-v good-t">${money(inc)}</span><span class="stat-l">доходы</span></div></div>`;
  h+=`<div class="search">${ic('search',18)}<input class="inp" id="opq" type="search" placeholder="Поиск: комментарий, категория, сумма" aria-label="Поиск операций" value="${esc(f.q)}" data-i="opq"></div>`;
- h+=`<div class="scroller">${[['all','Все'],['exp','Расходы'],['inc','Доходы'],['tr','Переводы']].map(([v,l])=>`<button class="chip" data-a="opfT" data-v="${v}" aria-pressed="${f.t===v}">${l}</button>`).join('')}${f.cat?`<button class="chip" data-a="opfCat" data-v="" aria-pressed="true">${esc(catOf(f.cat).n)} ${ic('close',14)}</button>`:''}</div>`;
+ h+=`<div class="scroller">${[['all','Все'],['exp','Расходы'],['inc','Доходы'],['tr','Переводы']].map(([v,l])=>`<button class="chip" data-a="opfT" data-v="${v}" aria-pressed="${f.t===v}">${l}</button>`).join('')}${f.cat?`<button class="chip" data-a="opfCat" data-v="" aria-pressed="true">${esc(catOf(f.cat).n)} ${ic('close',14)}</button>`:''}</div>${famOn()?`<div class="scroller">${scopeChips('opfS',f.s)}</div>`:''}`;
  h+=`<div id="opList" class="col">${opList(L)}</div><button class="btn sec blk" data-a="imOpen">${ic('copy',18)} Импорт выписки из банка</button>`;
  return `<div class="col">${h}</div>`; };
 function opList(L){ if(!L.length) return `<div class="card">${empty('list',ui.opf&&(ui.opf.q||ui.opf.cat||ui.opf.t!=='all')?'Ничего не нашлось. Сбросьте фильтр или измените поиск.':'В этом месяце операций нет.')}</div>`;
@@ -830,6 +851,7 @@ VIEWS.rep=()=>{ const p=periodOf(ui.per); const prev=periodOf(shiftPeriod(p.from
  if(tot){ const by={}; for(const o of exp) by[o.cat]=(by[o.cat]||0)+o.sum; const rows=Object.entries(by).sort((a,b)=>b[1]-a[1]);
   const top=rows.slice(0,7), rest=rows.slice(7); const parts=top.map(([c,v],i)=>({n:catOf(c).n,v,c:PALETTE[i%PALETTE.length]})); if(rest.length) parts.push({n:'Остальное',v:sum(rest,r=>r[1]),c:'var(--faint)'});
   h+=`<section class="card col-s"><h2 class="sec-h">Куда ушли деньги</h2><div class="donut-w">${donut(parts,190)}<div class="donut-c"><span class="lbl">всего</span><span class="b num">${moneyShort(tot)} ₸</span></div></div><div class="col-s">${rows.map(([c,v],i)=>{ const pv=spentIn(prev,c); const d=pv?(v-pv)/pv*100:null; const col=i<7?PALETTE[i%PALETTE.length]:'var(--faint)'; return `<button class="catrow" data-a="opsCat" data-v="${c}"><span class="dot" style="background:${col}"></span><span class="grow">${esc(catOf(c).n)}</span><span class="note num">${Math.round(v/tot*100)}%</span><span class="num b" style="min-width:92px;text-align:right">${money(v)}</span></button>${d!=null&&Math.abs(d)>=10?`<p class="note" style="margin:-6px 0 0 22px">${d>0?'↑':'↓'} на ${fmt(Math.abs(d),0)}% к прошлому месяцу</p>`:''}`; }).join('')}</div></section>`;
+  if(famOn()) h+=scopeCard(exp,tot);
   const big=[...exp].sort((a,b)=>b.sum-a.sum).slice(0,3);
   h+=`<section class="col-s"><h2 class="sec-h">Самые крупные траты</h2><div class="list">${big.map(opRow).join('')}</div></section>`; }
  else h+=`<div class="card">${empty('chart','В этом месяце расходов нет — отчёт появится после первых операций.')}</div>`;
@@ -837,6 +859,14 @@ VIEWS.rep=()=>{ const p=periodOf(ui.per); const prev=periodOf(shiftPeriod(p.from
  if(cols.some(c=>c.e||c.n)){ const max=Math.max(1,...cols.map(c=>Math.max(c.e,c.n)));
   h+=`<section class="card col-s"><h2 class="sec-h">Доходы и расходы за полгода</h2><div class="bars2">${cols.map(c=>`<div class="b2"><div class="b2-t"><i class="inc" style="height:${(c.n/max*100).toFixed(1)}%"></i><i class="exp" style="height:${(c.e/max*100).toFixed(1)}%"></i></div><span class="bc-l${c.cur?' acc-t b':''}">${c.label}</span></div>`).join('')}</div><div class="legend"><span><i class="lg" style="background:var(--good)"></i>доходы</span><span><i class="lg" style="background:var(--accent-soft)"></i>расходы</span></div></section>`; }
  return `<div class="col">${h}</div>`; };
+
+/* Личное и семейное: сравнение расходов за период */
+function scopeCard(exp,tot){ const L=Fam.list(); const groups=[{id:'me',n:'Личное',c:'var(--accent)'},...L.map((f,i)=>({id:f.id,n:L.length>1?f.name:'Семейное',c:['#E5577F','#2B8CC4','#E0A22E'][i%3]}))];
+ const sumOf=g=>sum(exp.filter(o=>g.id==='me'?!famOf(o):famOf(o)===g.id),o=>o.sum); const G=groups.map(g=>Object.assign(g,{v:sumOf(g)})).filter(g=>g.v||g.id==='me');
+ const byC={}; for(const o of exp){ const k=o.cat; const r=byC[k]||(byC[k]={me:0,fam:0}); if(famOf(o)) r.fam+=o.sum; else r.me+=o.sum; }
+ const rows=Object.entries(byC).sort((a,b)=>(b[1].me+b[1].fam)-(a[1].me+a[1].fam)).slice(0,8); const mx=Math.max(1,...rows.map(([,r])=>r.me+r.fam));
+ return `<section class="card col-s"><h2 class="sec-h">Личное и семейное</h2><div class="pbar2" role="img" aria-label="${esc(G.map(g=>g.n+' '+money(g.v)).join(', '))}">${G.map(g=>`<i style="width:${tot?(g.v/tot*100).toFixed(1):0}%;background:${g.c}"></i>`).join('')}</div><div class="col-xs">${G.map(g=>`<div class="between"><span class="row" style="gap:8px"><i class="dot" style="background:${g.c}"></i>${esc(g.n)}</span><span class="b">${money(g.v)} <span class="mut">· ${tot?Math.round(g.v/tot*100):0}%</span></span></div>`).join('')}</div>
+  <div class="col-s">${rows.map(([c,r])=>`<div class="col-xs"><div class="between"><span>${esc(catOf(c).n)}</span><span class="note">${r.me?'личное '+money(r.me):''}${r.me&&r.fam?' · ':''}${r.fam?'семья '+money(r.fam):''}</span></div><div class="pbar2 sm"><i style="width:${(r.me/mx*100).toFixed(1)}%;background:var(--accent)"></i><i style="width:${(r.fam/mx*100).toFixed(1)}%;background:#E5577F"></i></div></div>`).join('')}</div></section>`; }
 
 /* ============ Ритм·Деньги — листы ============ */
 function accChips(act,cur,withJars,exclude){ const L=[...S.accs.map(a=>[a.id,`${ic(ACC_IC[a.kind]||'card',16)} ${esc(a.n)}`])]; if(withJars) S.jars.forEach(j=>L.push(['jar:'+j.id,`${ic('piggy',16)} ${esc(j.n)}`]));
@@ -858,7 +888,7 @@ SH.op=()=>{ const o=ui.op; if(!o) return sheet({title:'Операция',body:''
  b+=opHint(o);
  const t=dkey(); const dch=[[t,'Сегодня'],[addDays(t,-1),'Вчера']];
  const accs=o.t!=='tr'&&S.accs.length>1?S.accs.map(a=>`<button class="chip ichip" data-a="opAcc" data-v="${a.id}" aria-pressed="${o.acc===a.id}">${ic(ACC_IC[a.kind]||'card',16)} ${esc(a.n)}</button>`).join(''):'';
- b+=`<div class="scroller">${dch.map(([k,l])=>`<button class="chip" data-a="opDate" data-v="${k}" aria-pressed="${o.date===k}">${l}</button>`).join('')}<label class="chip datechip" aria-pressed="${!dch.some(([k])=>k===o.date)}">${ic('cal',16)} ${dch.some(([k])=>k===o.date)?'Дата':relDay(o.date)}<input type="date" value="${o.date}" max="${addDays(t,366)}" data-c="opDateIn" aria-label="Выбрать дату"></label>${accs?'<span class="vsep"></span>'+accs:''}</div>`;
+ b+=`<div class="scroller">${o.t==='exp'&&famOn()?famChip('opFam',o.fam)+'<span class="vsep"></span>':''}${dch.map(([k,l])=>`<button class="chip" data-a="opDate" data-v="${k}" aria-pressed="${o.date===k}">${l}</button>`).join('')}<label class="chip datechip" aria-pressed="${!dch.some(([k])=>k===o.date)}">${ic('cal',16)} ${dch.some(([k])=>k===o.date)?'Дата':relDay(o.date)}<input type="date" value="${o.date}" max="${addDays(t,366)}" data-c="opDateIn" aria-label="Выбрать дату"></label>${accs?'<span class="vsep"></span>'+accs:''}</div>`;
  b+=`<input class="inp sm" id="opNote" type="text" placeholder="Комментарий" value="${esc(o.note||'')}" data-i="opNote" maxlength="80" enterkeyhint="done">`;
  if(isEdit) b+=ui.confirm==='opdel'?confirmBox('Удалить операцию?','opDel'):`<button class="btn ghost blk danger-t" data-a="ask" data-v="opdel">${ic('trash',16)} Удалить операцию</button>`;
  const ok=v>0&&(o.t==='tr'?o.acc&&o.to&&o.acc!==o.to:!!o.cat);
@@ -909,7 +939,7 @@ SH.pay=top=>{ const p=S.pays.find(x=>x.id===top.id); if(!p) return sheet({title:
  b+=`<label class="fld"><span class="lbl">Следующая дата</span><input class="inp" type="date" value="${p.next}" data-c="payNext" data-x="${p.id}"></label>`;
  b+=`<div class="col-xs"><span class="lbl">Категория</span><div class="chips">${expCats().map(c=>`<button class="chip ichip" data-a="payCat" data-x="${p.id}" data-v="${c.id}" aria-pressed="${p.cat===c.id}">${ic(c.ic,16)} ${esc(c.n)}</button>`).join('')}</div></div>`;
  if(S.accs.length>1) b+=`<div class="col-xs"><span class="lbl">Со счёта</span><div class="chips">${S.accs.map(a=>`<button class="chip" data-a="payAcc" data-x="${p.id}" data-v="${a.id}" aria-pressed="${p.acc===a.id}">${esc(a.n)}</button>`).join('')}</div></div>`;
- b+=`<div class="chips"><button class="chip" data-a="payOn" data-x="${p.id}" aria-pressed="${!p.on}">Поставить на паузу</button></div>`;
+ b+=`<div class="chips">${famChip('payFam',p.fam,`data-x="${p.id}"`)}</div><div class="chips"><button class="chip" data-a="payOn" data-x="${p.id}" aria-pressed="${!p.on}">Поставить на паузу</button></div>${famOf(p)?`<p class="note">Платёж видит семья «${esc(Fam.famName(famOf(p)))}»: оплатить может любой, у остальных он перенесётся сам.</p>`:''}`;
  const hist=allOps().filter(o=>o.pay===p.id).slice(0,12); if(hist.length) b+=`<h2 class="sec-h">Оплаты</h2><div class="list">${hist.map(opRow).join('')}</div>`;
  b+=ui.confirm==='paydel'?confirmBox('Удалить платёж? Прошлые оплаты останутся в операциях.','payDel','Удалить',`data-x="${p.id}"`):`<button class="btn ghost danger-t self-start" data-a="ask" data-v="paydel" style="padding:0">Удалить платёж</button>`;
  const t=dkey(); const due=p.on&&dBetween(t,p.next)<=3;
@@ -937,8 +967,11 @@ SH.onboard=()=>{ const o=ui.ob||(ui.ob={step:1,budget:'',card:'',cash:'',pstart:
 function ACC_FN(k,x){ if(k==='pstart') return {get:()=>S.pstart,set:v=>{ S.pstart=clamp(Math.round(v),1,28); ui.per=curPeriod().from; },step:1}; return null; }
 function newOp(t,extra={}){ const today=dkey(); const o={t,cat:null,acc:S.last.acc&&S.accs.some(a=>a.id===S.last.acc)?S.last.acc:S.accs[0].id,to:null,date:today,note:''};
  if(t==='exp'||t==='inc'){ const L=sortedCats(t); o.cat=L.some(c=>c.id===S.last[t])?S.last[t]:(L[0]&&L[0].id); }
+ if(t==='exp'&&famOn()&&o.cat) o.fam=famDefault(o.cat);
  if(t==='tr'){ const other=S.accs.find(a=>a.id!==o.acc); o.to=other?other.id:(S.jars[0]?'jar:'+S.jars[0].id:null); }
  return Object.assign(o,extra); }
+/* какую отметку ставить новой трате этой категории: как в прошлый раз */
+function famDefault(cat){ const v=S.famCat&&S.famCat[cat]; if(!v||!famOn()) return null; const fid=Fam.scopeOf({fam:v}); return fid&&Fam.fam(fid)?fid:null; }
 function openOp(o,v=''){ ui.op=o; ui.kp={v}; ui.catsAll=false; ui.confirm=null; ui.stack.push({type:'op',id:o.id||'new'}); render(); }
 function spreadLimits(){ const E=S.cats.filter(c=>c.kind==='exp'); const lims=sum(E,c=>c.lim||0); for(const c of E){ const share=lims?((c.lim||0)/lims):((c.pct||0)/100); c.lim=round1000(S.budget*share); } }
 function closeTop(){ ui.stack.pop(); ui.confirm=null; }
@@ -948,7 +981,9 @@ Object.assign(A,{
  opNew:d=>openOp(newOp(d.v||'exp')),
  opEdit:d=>{ const o=findOp(d.id); if(!o) return; openOp(Object.assign({},o),fmtIn(o.sum)); },
  opT:d=>{ const o=ui.op; if(o.t===d.v) return; const n=newOp(d.v,{id:o.id,date:o.date,note:o.note,ts:o.ts}); if(d.v!=='tr'&&o.acc&&!o.acc.startsWith('jar:')) n.acc=o.acc; ui.op=n; render(); },
- opCat:d=>{ ui.op.cat=d.v; render(); },
+ opCat:d=>{ const o=ui.op; o.cat=d.v; if(o.t==='exp'&&famOn()&&!o.famSet&&!o.id) o.fam=famDefault(d.v); render(); },
+ opFam:d=>{ const o=ui.op; o.fam=d.v||null; o.famSet=true; render(); },
+ opfS:d=>{ ui.opf.s=d.v; render(); },
  catsAll:()=>{ ui.catsAll=true; render(); },
  catAll:()=>{ ui.catAll=!ui.catAll; render(); },
  opAcc:d=>{ const o=ui.op; o.acc=d.v; if(o.t==='tr'&&o.to===d.v){ const other=S.accs.find(a=>a.id!==d.v); o.to=other?other.id:(S.jars.find(j=>'jar:'+j.id!==d.v)?'jar:'+S.jars.find(j=>'jar:'+j.id!==d.v).id:null); } render(); },
@@ -956,6 +991,7 @@ Object.assign(A,{
  opDate:d=>{ ui.op.date=d.v; render(); },
  opSave:()=>{ const o=ui.op; const v=kpValue(ui.kp.v); if(!(v>0)) return; const note=(o.note||'').trim().slice(0,80);
   const op={id:o.id||('o'+uid()),t:o.t,sum:v,acc:o.acc,date:o.date,note,ts:o.ts||Date.now()}; if(o.t==='tr') op.to=o.to; else op.cat=o.cat; if(o.pay) op.pay=o.pay;
+  if(o.t==='exp'&&o.fam){ op.fam=o.fam; } if(o.t==='exp'&&famOn()&&o.cat){ S.famCat=S.famCat||{}; if(o.fam) S.famCat[o.cat]=o.fam; else delete S.famCat[o.cat]; }
   const was=o.id?delOp(o.id):null; addOp(op);
   if(!was&&op.cat){ S.use[op.cat]=(S.use[op.cat]||0)+1; S.last[op.t]=op.cat; } if(op.t!=='tr'&&!op.acc.startsWith('jar:')) S.last.acc=op.acc;
   ui.op=null; ui.kp=null; closeTop(); Store.save(); render();
@@ -986,9 +1022,10 @@ Object.assign(A,{
  payCat:d=>{ const p=S.pays.find(x=>x.id===d.x); if(p){ p.cat=d.v; commit(); } },
  payAcc:d=>{ const p=S.pays.find(x=>x.id===d.x); if(p){ p.acc=d.v; commit(); } },
  payOn:d=>{ const p=S.pays.find(x=>x.id===d.x); if(p){ p.on=!p.on; commit(); } },
+ payFam:d=>{ const p=S.pays.find(x=>x.id===d.x); if(p){ if(!d.v){ delete p.fam; delete p.fa; } else p.fam=d.v; commit(); } },
  payDel:d=>{ S.pays=S.pays.filter(p=>p.id!==d.x); closeTop(); commit(); toast('Платёж удалён'); },
  payDo:d=>{ const p=S.pays.find(x=>x.id===d.id); if(!p) return; if(!(p.sum>0)){ ui.stack.push({type:'pay',id:p.id}); render(); toast('Укажите сумму платежа'); return; }
-  const prev=p.next; const op={id:'o'+uid(),t:'exp',sum:p.sum,cat:p.cat,acc:S.accs.some(a=>a.id===p.acc)?p.acc:S.accs[0].id,date:dkey(),note:p.n,pay:p.id,ts:Date.now()};
+  const prev=p.next; const op={id:'o'+uid(),t:'exp',sum:p.sum,cat:p.cat,acc:S.accs.some(a=>a.id===p.acc)?p.acc:S.accs[0].id,date:dkey(),note:p.n,pay:p.id,ts:Date.now()}; if(p.fam) op.fam=p.fam;
   addOp(op); p.next=nextPayDate(p,p.next); const t=topSheet(); if(t&&t.type==='pay') closeTop(); Store.save(); render(); vibrate(12);
   toast(`Оплачено: ${p.n} ${money(p.sum)} · следующий ${fmtDay(p.next)}`,()=>{ delOp(op.id); p.next=prev; Store.save(); render(); }); },
  paySkip:d=>{ const p=S.pays.find(x=>x.id===d.id); if(!p) return; p.next=nextPayDate(p,p.next); closeTop(); commit(); toast('Следующий платёж — '+fmtDay(p.next)); },
