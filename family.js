@@ -112,10 +112,13 @@ function collectOwned(fid,D,now,f){ const me=f.me;
  const cat=id=>{ const x=ds&&Array.isArray(ds.cats)?ds.cats.find(y=>y.id===id):null; return x?{cn:x.n,ci:x.ic}:{cn:'Другое',ci:'dots'}; };
  for(const b of Object.values(db)) for(const o of (b&&b.ops)||[]){ if(!o||!isF(o)||o.t!=='exp'||!(o.date>=from)) continue; mine.add(o.id); own(D,'ops',o.id,Object.assign({date:o.date,sum:o.sum,cat:o.cat,note:o.note||''},cat(o.cat)),now,me); }
  for(const [id,x] of Object.entries(D.F.ops||{})) if(x.a===me&&!x.x&&!mine.has(id)) drop(D,'ops',id,now,me);
- if(!f.share||f.share.body!==false){ const W=jget('ritm-telo-workouts-v1'); const days={}; const from2=addD(dk(),-21);
+ const shB=!f.share||f.share.body!==false, shP=!f.share||f.share.preg!==false; const body={};
+ if(shB){ const W=jget('ritm-telo-workouts-v1'); const days={}; const from2=addD(dk(),-21);
   if(Array.isArray(W)) for(const w of W){ if(!w||!w.date||w.date<from2) continue; const x=days[w.date]||(days[w.date]={n:0,t:[],min:0}); x.n++; x.min+=Math.round(w.dur||0); if(w.day&&x.t.length<3) x.t.push(String(w.day).slice(0,30)); }
-  own(D,'body',me,{days},now,me); }
- else drop(D,'body',me,now,me); }
+  body.days=days; }
+ /* срок беременности (общая запись Питания и Тела) — если не скрыт для этой семьи */
+ const pg=jget('ritm-preg-state-v1'); if(shP&&pg&&pg.on&&pg.due) body.preg={due:pg.due};
+ if(body.days||body.preg) own(D,'body',me,body,now,me); else drop(D,'body',me,now,me); }
 function mergeIn(D,R){ for(const [name,coll] of Object.entries(R||{})){ if(!coll||typeof coll!=='object') continue; const L=D.F[name]||(D.F[name]={});
   for(const [id,r] of Object.entries(coll)){ if(!r||typeof r.u!=='number') continue; const l=L[id]; if(!l||r.u>l.u||(r.u===l.u&&String(r.b)>String(l.b))) L[id]=r; } } }
 function purge(D){ const lim=Date.now()-60*864e5; for(const coll of Object.values(D.F)) for(const [id,f] of Object.entries(coll)) if(f&&f.x&&f.u<lim) delete coll[id];
@@ -260,6 +263,9 @@ window.Fam={
  sync:o=>sync(o), soon, create, join, leave, invite, parseInvite, edit, editApp, admin, COLORS, FamErr, cleanRepo, okToken, openFam,
  pitFam:()=>cfgAll().pit, setPit:fid=>{ const c=cfgAll(); const old=c.pit; c.pit=fid||null; setAll(c); if(old&&old!==fid){ const D=load(old); D.snap.shop={}; D.snap.home={}; save(old,D); } soon(300,true); emit(); },
  shareBody:fid=>{ const f=fam(fid); return !!f&&(!f.share||f.share.body!==false); },
+ sharePreg:fid=>{ const f=fam(fid); return !!f&&(!f.share||f.share.preg!==false); },
+ setSharePreg:(fid,v)=>{ const c=cfgAll(); const f=c.list.find(x=>x.id===(fid||c.cur)); if(!f) return; f.share=Object.assign({},f.share,{preg:!!v}); setAll(c); soon(300,true); emit(); },
+ myPreg:()=>{ const p=jget('ritm-preg-state-v1'); return p&&p.on&&p.due?p:null; },
  setShareBody:(fid,v)=>{ const c=cfgAll(); const f=c.list.find(x=>x.id===(fid||c.cur)); if(!f) return; f.share=Object.assign({},f.share,{body:!!v}); setAll(c); soon(300,true); emit(); },
  setMe:(o,fid)=>{ const c=cfgAll(); for(const f of c.list) if(!fid||f.id===fid){ if(o.name) f.mname=String(o.name).slice(0,24); if(o.color) f.color=o.color; } setAll(c); soon(300,true); emit(); },
  setToken:(fid,t)=>{ const c=cfgAll(); const f=c.list.find(x=>x.id===(fid||c.cur)); t=String(t||'').trim(); if(!f||!okToken(t)) return false; f.token=t; setAll(c); const D=load(f.id); D.err=null; save(f.id,D); soon(100,true); return true; },

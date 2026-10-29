@@ -50,6 +50,7 @@ h1{font-family:var(--f-display);font-size:28px;font-weight:600;line-height:1.15;
 .ico{display:inline-flex;vertical-align:-3px;color:#0A84FF}
 .note{margin:0;color:var(--muted);font-size:14px}
 .acc{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.inst-btn{width:100%;min-height:52px;border:none;border-radius:999px;background:var(--ink);color:var(--bg);font:inherit;font-size:16px;font-weight:700;margin-bottom:4px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -59,6 +60,7 @@ h1{font-family:var(--f-display);font-size:28px;font-weight:600;line-height:1.15;
  <p class="lead" id="lead">Тренировки, бюджет, питание и цели — с общими данными. Работает без интернета, всё хранится на телефоне. Телефоны семьи можно объединить: общие покупки, дела и траты.</p>
  <section class="card acc" id="install" hidden>
   <h2>Установите на iPhone</h2>
+  <div id="inst-ios">
   <ol class="steps">
    <li>Откройте эту страницу в <b>Safari</b>.</li>
    <li>Нажмите «Поделиться» <span class="ico" id="shi"></span> внизу экрана.</li>
@@ -66,6 +68,18 @@ h1{font-family:var(--f-display);font-size:28px;font-weight:600;line-height:1.15;
    <li>Откройте Ритм значком на экране «Домой».</li>
   </ol>
   <p class="note">Так Ритм открывается на весь экран, работает без интернета, и данные живут в приложении. То, что внесено в Safari, в приложение не переносится.</p>
+  </div>
+  <div id="inst-and" hidden>
+   <button class="inst-btn" id="instBtn" hidden>Установить Ритм</button>
+   <ol class="steps">
+    <li>Откройте эту страницу в <b>Chrome</b>.</li>
+    <li>Нажмите меню <b>⋮</b> справа вверху.</li>
+    <li>Выберите <b>«Установить приложение»</b> или <b>«Добавить на главный экран»</b>.</li>
+    <li>Открывайте Ритм значком на главном экране.</li>
+   </ol>
+   <p class="note">Ритм откроется на весь экран и будет работать без интернета. Долгое нажатие на значок — быстрый переход в Тело, Деньги, Питание, Цели или Семью.</p>
+   <p class="note">Есть и Android-приложение (APK) — в нём ещё работают напоминания. Данные веб-версии и APK отдельные; перенести их можно «Копией всего Ритма» в настройках.</p>
+  </div>
  </section>
  <div class="apps" id="apps"></div>
  <p class="note" id="foot">Переключаться между приложениями — нажатием на название «Ритм·…» вверху экрана. Напоминания на iPhone не приходят: Apple не даёт веб-приложениям присылать уведомления по расписанию. Резервная копия — в настройках каждого приложения.</p>
@@ -75,7 +89,11 @@ h1{font-family:var(--f-display);font-size:28px;font-weight:600;line-height:1.15;
  document.getElementById('apps').innerHTML=A.map(function(a){ return '<a class="app" href="'+a.page+'" data-id="'+a.id+'"><span class="app-t" style="background:'+a.c+'">'+(g?g(a,24):'')+'</span><span class="app-m"><b>'+a.n+'</b><small>'+a.d+'</small></span><span class="chev" aria-hidden="true"></span></a>'; }).join('');
  document.getElementById('apps').addEventListener('click',function(e){ var l=e.target.closest('a[data-id]'); if(l) try{ localStorage.setItem('ritm-ios-last',l.getAttribute('data-id')); }catch(x){} });
  var si=document.getElementById('shi'); if(si&&window.RITM_SHARE_ICON) si.innerHTML=window.RITM_SHARE_ICON();
- if(!window.RITM_STANDALONE){ document.getElementById('install').hidden=false; if(!window.RITM_ISIOS){ document.querySelector('#install h2').textContent='Для iPhone'; } }
+ if(!window.RITM_STANDALONE){ document.getElementById('install').hidden=false;
+  if(window.RITM_ISANDROID){ document.querySelector('#install h2').textContent='Установите на Android'; document.getElementById('inst-ios').hidden=true; document.getElementById('inst-and').hidden=false;
+   var ib=document.getElementById('instBtn'); var upd=function(){ ib.hidden=!(window.RITM_CAN_INSTALL&&window.RITM_CAN_INSTALL()); }; upd(); window.addEventListener('ritm-installable',upd); ib.addEventListener('click',function(){ window.RITM_INSTALL(); ib.hidden=true; }); }
+  else if(!window.RITM_ISIOS){ document.querySelector('#install h2').textContent='Для iPhone и Android'; document.getElementById('inst-and').hidden=false; } }
+ var ft=document.getElementById('foot'); if(ft&&window.RITM_ISANDROID) ft.textContent='Переключаться между приложениями — нажатием на название «Ритм·…» вверху экрана. В веб-версии напоминания по расписанию не приходят — они есть в Android-приложении (APK). Резервная копия — в настройках каждого приложения.';
  else { document.getElementById('ttl').textContent='С чего начнём?'; document.getElementById('lead').textContent='Выберите приложение. В следующий раз Ритм откроется там, где вы остановились.'; }
 })();
 </script>

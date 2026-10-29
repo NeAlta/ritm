@@ -383,6 +383,8 @@ body.locked .toast{top:calc(66px + env(safe-area-inset-top,0px));bottom:auto}
 .warn-t{color:var(--warn)}
 .ichip{display:inline-flex;align-items:center;gap:6px}
 .mac .num{font-size:14px}
+.cardbtn{display:flex;width:100%;border:none;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
+.callout.bad{background:var(--bad-tint,#FDE7E4);color:var(--bad,#B42318)}
 
 </style>
 
@@ -497,6 +499,39 @@ const Family={
  canOpen(){ try{ return !!(window.RitmNative&&window.RitmNative.open); }catch(e){ return false; } }
 };
 
+/* ---------- Беременность: одна запись на все приложения ----------
+   p = {on, due:'ГГГГ-ММ-ДД' (предполагаемая дата родов), kg0 (вес до беременности), u (время правки)}.
+   В Android и iPhone приложения делят её через localStorage (ключ ritm-preg-state-v1 входит в копию всего Ритма). */
+const PREG_K='ritm-preg-state-v1';
+function pregInfo(p,k=dkey()){ if(!p||!p.on||!p.due) return null; const left=dBetween(k,p.due); const d=280-left; if(d<0||d>301) return null; return {d,w:Math.floor(d/7),dd:d%7,tri:d<98?1:d<196?2:3,left}; }
+function pregLabel(i){ return `${i.w} нед${i.dd?' '+i.dd+' дн':''} · ${['I','II','III'][i.tri-1]} триместр`; }
+function pregLeft(i){ return i.left>0?`до родов ${pl(Math.ceil(i.left/7),['неделя','недели','недель'])}`:i.left===0?'срок родов сегодня':'срок родов прошёл'; }
+function pregShared(){ return typeof window!=='undefined'&&window.RITM_APP?lsGet(PREG_K):null; }
+function pregPick(local){ const sh=pregShared(); if(sh&&(!local||(sh.u||0)>(local.u||0))) return sh; return local||null; }
+function pregPut(p){ p=Object.assign({},p,{u:Date.now()}); if(typeof window!=='undefined'&&window.RITM_APP) lsSet(PREG_K,p); return p; }
+function dueFromLmp(lmp){ return addDays(lmp,280); }
+/* прибавка веса по IOM 2009: [итого, кг] и [в неделю во II–III триместре, кг] по ИМТ до беременности */
+const GWG={under:{n:'ИМТ до беременности меньше 18,5',t:[12.5,18],r:[.44,.58]},normal:{n:'ИМТ 18,5–24,9',t:[11.5,16],r:[.35,.50]},over:{n:'ИМТ 25–29,9',t:[7,11.5],r:[.23,.33]},obese:{n:'ИМТ 30 и больше',t:[5,9],r:[.17,.27]}};
+function gwgCat(kg0,h){ const b=kg0/Math.pow(h/100,2); return b<18.5?'under':b<25?'normal':b<30?'over':'obese'; }
+function gwgRange(i,kg0,h){ const g=GWG[gwgCat(kg0,h)]; const d=Math.min(i.d,280); if(d<=91) return [.5*d/91,2*d/91,g]; const wk=(d-91)/7; return [.5+wk*g.r[0],2+wk*g.r[1],g]; }
+/* продукты при беременности: id базы Питания и слова в названии */
+const PREG_FOOD=[
+ {re:/печен|паштет|liver/i,ids:['liver'],lvl:'no',t:'Печень и паштеты — лучше исключить: много витамина A, паштеты — риск листерий'},
+ {re:/кумыс|шубат|пив|(^|[^а-яё])вин(о|а)([^а-яё]|$)|водк|коньяк|виски|шампан|алкогол/i,ids:['kumys','beer'],lvl:'no',t:'Алкоголь — безопасного количества нет. Кумыс и шубат — напитки брожения, в кумысе бывает до 4 % спирта'},
+ {re:/суши|ролл|сашими|слабосол|малосол|копч(ён|ен)[а-я]* (рыб|лосос|сёмг|семг)|сельд|селёдк|сырая рыба/i,ids:['herring'],lvl:'no',t:'Сырая, слабосолёная и холодного копчения рыба — риск листерий; можно только прогретой до горячего'},
+ {re:/(^|[^а-яё])бри([^а-яё]|$)|камамбер|дор ?блю|горгонзол|рокфор|с плесенью/i,lvl:'no',t:'Мягкие сыры с плесенью — только прогретые до горячего (листерии)'},
+ {re:/акул|меч-рыб|марлин/i,lvl:'no',t:'Много ртути — исключить'},
+ {re:/сырое молоко|парное|непастер/i,lvl:'no',t:'Непастеризованное молоко — только после кипячения'},
+ {re:/тунец|tuna/i,ids:['tuna'],lvl:'limit',t:'Тунец — не больше 4 банок в неделю (ртуть)'},
+ {re:/казы|шужук|сыровял|салями|вялен/i,ids:['kazy'],lvl:'limit',t:'Казы и вяленые колбасы — только хорошо проваренные, горячими'},
+ {re:/лосос|сёмг|семг|скумбр/i,ids:['salmon'],lvl:'limit',t:'Жирная рыба полезна, но не чаще 2 раз в неделю'},
+ {re:/энергет|кофе|эспрессо|капучин|латте|американо|кола|(^|[^а-яё])чай([^а-яё]|$)/i,ids:['coffee','cappuccino','tea','cola','choc_dark'],lvl:'caf',t:'Кофеин — не больше 200 мг в день'},
+ {re:/яйц/i,ids:['egg'],lvl:'info',t:'Яйца — только хорошо приготовленные, без жидкого желтка'}];
+function pregFood(f){ if(!f) return null; for(const r of PREG_FOOD){ if((r.ids&&r.ids.includes(f.id))||r.re.test(f.n||'')) return r; } return null; }
+/* кофеин, мг на 100 г — средние значения (USDA FoodData Central) */
+const CAF={coffee:40,cappuccino:35,tea:20,cola:10,choc_dark:80,choc_milk:20};
+function cafPer100(f){ if(!f) return 0; if(CAF[f.id]!=null) return CAF[f.id]; const n=f.n||''; if(/эспрессо/i.test(n)) return 212; if(/энергет/i.test(n)) return 32; if(/капучин|латте/i.test(n)) return 35; if(/кофе|американо/i.test(n)) return 40; if(/зел[её]н[а-я]* чай/i.test(n)) return 12; if(/(^|[^а-яё])чай([^а-яё]|$)/i.test(n)) return 20; if(/кола/i.test(n)) return 10; return 0; }
+
 /* ---------- Телефон: уведомления, отправка ---------- */
 const Native={
  ok(){ try{ return !!(window.RitmNative&&window.RitmNative.notifyAt); }catch(e){ return false; } },
@@ -518,7 +553,7 @@ function syncReminders(){ clearTimeout(remT); remT=setTimeout(()=>{ if(!Native.o
 function remindPrompt(){ if(!Native.ok()||Native.can()||!S.remind||S.remind.on===false||S.remind.later) return '';
  return `<div class="callout acc"><p class="b">${ic('bell',16)} Включить напоминания?</p><p>${APP.remindWhy||'Ритм напомнит о важном уведомлением.'}</p><div class="row wrap gap6"><button class="btn pri sm" data-a="remAsk">Разрешить</button><button class="btn ghost sm" data-a="remLater" style="color:inherit">Не сейчас</button></div></div>`; }
 function remindCard(inner=''){ const R=S.remind||{};
- if(!Native.ok()) return `<section class="card col-s"><h2 class="sec-h">Напоминания</h2><p class="p">${APP.remindWhy||''} ${window.RITM_IOS?'На iPhone веб-приложение не может присылать уведомления по расписанию — это ограничение Apple. Напоминания работают в Android-версии Ритма.':'Уведомления работают в Android-версии Ритма.'}</p></section>`;
+ if(!Native.ok()) return `<section class="card col-s"><h2 class="sec-h">Напоминания</h2><p class="p">${APP.remindWhy||''} ${window.RITM_IOS?(window.RITM_ISIOS?'На iPhone веб-приложение не может присылать уведомления по расписанию — это ограничение Apple. Напоминания работают в Android-приложении Ритма.':'В веб-версии напоминания по расписанию не приходят — они работают в Android-приложении Ритма (APK).'):'Уведомления работают в Android-версии Ритма.'}</p></section>`;
  const can=Native.can();
  return `<section class="card col-s"><div class="between"><h2 class="sec-h">Напоминания</h2><button class="chip" data-a="remOn" aria-pressed="${R.on!==false}">${R.on!==false?'Включены':'Выключены'}</button></div>${R.on!==false&&!can?`<div class="callout warn"><p>Телефон не разрешает уведомления Ритма.</p><button class="btn ghost" data-a="remAsk">Разрешить</button></div>`:''}${R.on!==false?inner:''}</section>`; }
 function timeChips(act,cur,list=['08:00','09:00','10:00','12:00','18:00','20:00','21:00']){ return `<div class="chips">${list.map(t=>`<button class="chip" data-a="${act}" data-v="${t}" aria-pressed="${cur===t}">${t}</button>`).join('')}</div>`; }
@@ -532,9 +567,9 @@ async function retry(fn){ try{ return await fn(); }catch(e){ if(e&&(e.code==='un
 function errText(e){ const c=e&&e.code; if(c==='quota_exceeded') return 'Облако заполнено — удалите старые данные или сделайте резервную копию'; if(c==='revoked'||c==='not_granted') return 'Нет доступа к облаку — изменения сохранены на этом устройстве'; return 'Не удалось сохранить в облако — изменения есть на этом устройстве'; }
 const Store={
  mode:'local',ref:null,col:null,timer:null,dirty:new Set(),
- loadLocal(){ const s=lsGet(LS_S()); S=APP.normalize(s||null); const b=lsGet(LS_B()); B=b&&typeof b==='object'?b:{}; LSRAW[LS_S()]=lsRaw(LS_S()); LSRAW[LS_B()]=lsRaw(LS_B()); if(APP.onData) APP.onData(); },
+ loadLocal(){ const s=lsGet(LS_S()); S=APP.normalize(s||null); const b=lsGet(LS_B()); B=b&&typeof b==='object'?b:{}; LSRAW[LS_S()]=lsRaw(LS_S()); LSRAW[LS_B()]=lsRaw(LS_B()); LSRAW[PREG_K]=lsRaw(PREG_K); if(APP.onData) APP.onData(); },
  /* Другое приложение семейства (или восстановление копии) могло изменить наши данные — перечитать */
- changedOutside(){ return this.mode!=='db'&&(lsRaw(LS_S())!==LSRAW[LS_S()]||lsRaw(LS_B())!==LSRAW[LS_B()]); },
+ changedOutside(){ return this.mode!=='db'&&(lsRaw(LS_S())!==LSRAW[LS_S()]||lsRaw(LS_B())!==LSRAW[LS_B()]||lsRaw(PREG_K)!==LSRAW[PREG_K]); },
  async init(){
   let db=null,user=null;
   try{ if(window.claude&&typeof window.claude.use==='function'){ [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]); } }catch(e){}
@@ -560,7 +595,7 @@ const Store={
  async reset(){ const old=Object.keys(B); S=APP.normalize(null); B={}; lsSet(LS_S(),S); lsSet(LS_B(),B); if(APP.onData) APP.onData(); if(this.mode==='db'){ try{ await this.ref.set(clone(S)); for(const k of old) await this.col.doc(k).delete(); }catch(e){ toast(errText(e)); } } }
 };
 function bucket(k,make){ if(!B[k]&&make) B[k]=make(); return B[k]||null; }
-function storageText(){ if(Store.mode==='db') return 'Сохраняются в вашем аккаунте Claude и видны только вам.'; if(typeof window!=='undefined'&&window.RITM_IOS) return 'Хранятся только на этом iPhone, внутри значка «Ритм». Если удалить значок с экрана «Домой», данные сотрутся — делайте копию всего Ритма и сохраняйте её в Заметки или Файлы.'; if(typeof window!=='undefined'&&window.RITM_APP) return 'Хранятся только на этом телефоне. Делайте резервную копию перед сменой телефона или удалением приложения.'; return 'Сохраняются только в этом браузере. Откройте приложение в Claude, чтобы данные хранились в аккаунте.'; }
+function storageText(){ if(Store.mode==='db') return 'Сохраняются в вашем аккаунте Claude и видны только вам.'; if(typeof window!=='undefined'&&window.RITM_IOS) return window.RITM_ISIOS?'Хранятся только на этом iPhone, внутри значка «Ритм». Если удалить значок с экрана «Домой», данные сотрутся — делайте копию всего Ритма и сохраняйте её в Заметки или Файлы.':'Хранятся только на этом телефоне, в веб-версии Ритма. Если удалить её значок или очистить данные браузера, данные могут стереться — делайте копию всего Ритма и сохраняйте её в Файлы или мессенджер.'; if(typeof window!=='undefined'&&window.RITM_APP) return 'Хранятся только на этом телефоне. Делайте резервную копию перед сменой телефона или удалением приложения.'; return 'Сохраняются только в этом браузере. Откройте приложение в Claude, чтобы данные хранились в аккаунте.'; }
 
 /* ---------- Интерфейс: состояние, листы, рендер ---------- */
 const ui={tab:null,stack:[],confirm:null,booting:true,lastDepth:0,lastTop:'',backup:null,bkText:'',bkData:null,kp:null};
@@ -857,6 +892,8 @@ const RECIPES=[
 ];
 /* Суточные нормы (взрослые) по полу и возрасту; натрий — верхний лимит */
 function norms(P){ const m=P.sex!=='f', a=P.age||30;
+ /* беременность — NIH ODS (RDA/AI для беременных 19–50 лет) */
+ if(!m&&pregInfo(P.preg)) return {d:15,c:85,b12:2.6,fol:600,fe:27,ca:a<19?1300:1000,mg:a<=30?350:360,k:2900,zn:11,na:2300};
  return {d:a>70?20:15,c:m?90:75,b12:2.4,fol:400,fe:m?8:(a>50?8:18),ca:(m?(a>70?1200:1000):(a>50?1200:1000)),mg:m?(a>30?420:400):(a>30?320:310),k:m?3400:2600,zn:m?11:8,na:2300}; }
 const MIC_N={d:['Витамин D','мкг'],c:['Витамин C','мг'],b12:['Витамин B12','мкг'],fol:['Фолат (B9)','мкг'],fe:['Железо','мг'],ca:['Кальций','мг'],mg:['Магний','мг'],k:['Калий','мг'],zn:['Цинк','мг'],na:['Натрий','мг']};
 const MIC_WHY={d:'кости, иммунитет',c:'иммунитет, усвоение железа',b12:'нервная система, кровь',fol:'кровь, деление клеток',fe:'перенос кислорода',ca:'кости и зубы, мышцы',mg:'мышцы, сон, нервы',k:'сердце, давление',zn:'иммунитет, кожа',na:'лимит: избыток повышает давление'};
@@ -864,6 +901,7 @@ const VIT=['d','c','b12','fol'], MINR=['fe','ca','mg','k','zn','na'];
 
 /* ============ Ритм·Питание — модель и расчёты ============ */
 Object.assign(IC,{
+ baby:'<circle cx="12" cy="6" r="3"/><path d="M7 21v-3a5 5 0 0 1 10 0v3M9 13.5c-1.5.8-3 2.4-3 4.5M15 13.5c1.5.8 3 2.4 3 4.5"/>',
  drop:'<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/>',fridge:'<rect x="5" y="2.5" width="14" height="19" rx="2.5"/><path d="M5 10h14M9 6v2M9 13v3"/>',
  snow:'<path d="M12 2v20M4 6l16 12M20 6L4 18M9 3.5l3 2.5 3-2.5M9 20.5l3-2.5 3 2.5"/>',box:'<path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/>',
  cart:'<path d="M3 4h2l2.4 11h11l2-8H6.3M9 20h.01M17 20h.01"/>',chef:'<path d="M7 14a4 4 0 0 1-1-7.9 5 5 0 0 1 9.6-1A4 4 0 1 1 17 14v6H7zM7 17h10"/>',
@@ -878,7 +916,7 @@ const PLACES={fridge:['Холодильник','fridge'],freezer:['Морози�
 const UNITS=['г','кг','мл','л','шт'];
 const CAT_PLACE={meat:'fridge',fish:'fridge',dairy:'fridge',veg:'fridge',fruit:'fridge',dish:'fridge',grain:'shelf',nuts:'shelf',oil:'shelf',sweet:'shelf',drink:'shelf'};
 function DEF(){ return {v:1,setup:false,theme:'auto',profile:{sex:'m',age:28,h:178,kg:76,act:'sit',goal:'keep'},water:8,custom:[],myrec:[],fav:[],home:[],shop:[],recent:[],remind:{on:true,exp:true,time:'10:00',log:false,logTime:'20:00'}}; }
-function normalize(s){ const o=Object.assign(DEF(),s||{}); o.profile=Object.assign(DEF().profile,(s&&s.profile)||{}); for(const k of ['custom','myrec','fav','home','shop','recent']) if(!Array.isArray(o[k])) o[k]=[]; return o; }
+function normalize(s){ const o=Object.assign(DEF(),s||{}); o.profile=Object.assign(DEF().profile,(s&&s.profile)||{}); o.profile.preg=pregPick(o.profile.preg)||undefined; if(!o.profile.preg) delete o.profile.preg; for(const k of ['custom','myrec','fav','home','shop','recent']) if(!Array.isArray(o[k])) o[k]=[]; return o; }
 const APP={id:'pit',name:'Питание',icon:'apple',tabs:['today','nut','home','rec'],normalize,
  fab:t=>t==='today'||t==='home',
  remindWhy:'Ритм напомнит, когда у продуктов дома заканчивается срок, и — если хотите — записать еду вечером.',
@@ -890,8 +928,12 @@ const APP={id:'pit',name:'Питание',icon:'apple',tabs:['today','nut','home
 };
 /* ---------- Норма ---------- */
 function bmr(P){ return 10*P.kg+6.25*P.h-5*P.age+(P.sex==='f'?-161:5); }
-function normKcal(P=S.profile){ return Math.round(bmr(P)*ACT[P.act][0]*GOALS[P.goal][0]); }
-function macroTargets(P=S.profile){ const n=normKcal(P); const p=Math.round(1.6*P.kg), f=Math.round(n*.3/9), c=Math.max(0,Math.round((n-p*4-f*9)/4)); return {p,f,c}; }
+/* беременность: обмен по весу до беременности, без похудения; прибавка по триместру — IOM: +0 / +340 / +452 ккал */
+function pregP(P=S.profile){ return P&&P.sex==='f'?pregInfo(P.preg):null; }
+const PREG_ADD=[0,0,340,452];
+function normKcal(P=S.profile){ const i=pregP(P); if(i){ const P0=Object.assign({},P,{kg:P.preg.kg0||P.kg}); return Math.round(bmr(P0)*ACT[P.act][0]+PREG_ADD[i.tri]); } return Math.round(bmr(P)*ACT[P.act][0]*GOALS[P.goal][0]); }
+function dayCaf(k){ return sum(dayItems(k),e=>{ const f=food(e.f)||{id:e.f,n:e.n}; return cafPer100(f)*(e.g||0)/100; }); }
+function macroTargets(P=S.profile){ const n=normKcal(P); const kgP=pregP(P)&&P.preg.kg0?P.preg.kg0:P.kg; const p=Math.max(pregP(P)?71:0,Math.round(1.6*kgP)), f=Math.round(n*.3/9), c=Math.max(0,Math.round((n-p*4-f*9)/4)); return {p,f,c}; }
 /* ---------- Продукты ---------- */
 function recipeById(id){ return RECIPES.find(r=>r.id===id)||S.myrec.find(r=>r.id===id)||null; }
 function recipeTotals(r){ const t={kcal:0,p:0,f:0,c:0,m:MIC.map(()=>0),g:0}; for(const [fid,g] of r.ing){ const f=food(fid); if(!f) continue; addN(t,scale(f,g)); t.g+=g; } return t; }
@@ -958,6 +1000,7 @@ VIEWS.today=()=>{ const k=ui.day, P=S.profile; const N=normKcal(), T=dayTotalsN(
   ${act.src==='telo'&&act.telo?`<span class="note">${lchip('telo').replace('lchip','lchip dk')} ${pl(act.n,['тренировка','тренировки','тренировок'])}: +${kc(act.telo)} ккал</span>`:''}
   <div class="macs">${macroBar('Белки',T.p,mt.p)}${macroBar('Жиры',T.f,mt.f)}${macroBar('Углеводы',T.c,mt.c)}</div>
   <button class="btn ghost sm self-start" data-a="push" data-s="norm" style="color:var(--on-dark);padding:0">Как рассчитана норма ${ic('right',16)}</button></section>`;
+ h+=pregCard(k);
  // вода
  const d=dayRec(k); const w=d?d.water||0:0; const goal=S.water||8;
  h+=`<section class="card col-s"><div class="between"><h2 class="sec-h">Вода</h2><span class="note num">${fmt(w*.25,2)} из ${fmt(goal*.25,2)} л</span></div><div class="glasses">${Array.from({length:Math.max(goal,w)},(_,i)=>`<button class="gl${i<w?' on':''}" data-a="water" data-v="${i<w?i:i+1}" aria-label="${i<w?'Убрать стакан':'Стакан воды'} ${i+1}">${ic('drop',20)}</button>`).join('')}</div></section>`;
@@ -982,7 +1025,7 @@ function suggestRecipe(left){ const h=new Date().getHours(); const meal=h<11?'b'
 VIEWS.nut=()=>{ const P=S.profile, Nm=norms(P); const mode=ui.nmode||'day'; const k=ui.day;
  let tot, n=1; if(mode==='week'){ const w=weekAvg(k); tot=w.t; n=w.n; } else tot=dayTotalsN(k);
  const st=MIC.map((key,i)=>({key,i,v:tot.m[i],...micStatus(i,tot.m[i],Nm)})); const low=st.filter(x=>x.flag==='low'), ovr=st.filter(x=>x.flag==='over');
- let h=topBar()+`<h1 class="h1">Витамины и минералы</h1>`;
+ let h=topBar()+`<h1 class="h1">Витамины и минералы</h1>`+(pregP(P)?`<p class="note">${ic('baby',13)} Нормы для беременных (NIH ODS): больше фолата, железа, витамина D, цинка и B12.</p>`:'');
  h+=seg([['day',k===dkey()?'Сегодня':relDay(k)],['week','Среднее за неделю']],'nmode',mode,'Период');
  if(mode==='week'&&!n) return `<div class="col">${h}<div class="card">${empty('leaf','За последнюю неделю записей нет. Записывайте еду — здесь появится средний рацион.')}</div></div>`;
  if(mode==='day'&&!dayItems(k).length) return `<div class="col">${h}<div class="card">${empty('leaf','Добавьте еду в дневник — здесь появится, каких витаминов и минералов хватает, а каких мало.','<button class="btn pri" data-a="addFood">Добавить еду</button>')}</div></div>`;
@@ -1036,9 +1079,12 @@ VIEWS.rec=()=>{ const f=ui.rf||'all'; const q=norm(ui.rq||'');
 function recCards(L){ if(!L.length) return `<div class="card">${empty('chef',ui.rf==='can'?'Пока ни один рецепт не собирается целиком из продуктов дома. Добавьте продукты во вкладке «Дома».':ui.rf==='fav'?'Нажмите сердечко в рецепте, чтобы он появился здесь.':ui.rf==='my'?'Здесь будут ваши рецепты.':'Ничего не нашлось.')}</div>`;
  return L.map(x=>`<button class="rcard" data-a="push" data-s="recipe" data-id="${x.r.id}"><span class="rc-ic">${ic(x.r.meal==='b'?'sun':x.r.meal==='l'?'bowl':'chef',22)}</span><span class="col-xs grow"><span class="b">${esc(x.r.n)}${S.fav.includes(x.r.id)?` <span class="acc-t">${ic('heartF',14)}</span>`:''}</span><span class="note">${x.r.min} мин · ${kc(x.s.kcal)} ккал на порцию</span><span class="note ${x.miss.length?'':'good-t b'}">${x.miss.length?`не хватает: ${x.miss.slice(0,3).map(m=>m.f?m.f.n.toLowerCase():'').join(', ')}${x.miss.length>3?' и ещё '+(x.miss.length-3):''}`:'всё есть дома'}</span></span>${ic('right',18)}</button>`).join(''); }
 
+function pregCard(k){ const i=pregP(); if(!i) return ''; const caf=Math.round(dayCaf(k));
+ return `<button class="card col-s cardbtn" data-a="push" data-s="preg"><div><div class="b row gap6">${ic('baby',18)} ${pregLabel(i)}</div><div class="note">${pregLeft(i)}</div></div><div class="between"><span class="note">Кофеин ${caf} из 200 мг</span><span class="note">${PREG_ADD[i.tri]?'+'+PREG_ADD[i.tri]+' ккал к норме':'прибавки к норме нет'}</span></div>${pbar(caf/200,caf>200?'over':'')}</button>`; }
+
 /* ============ Ритм·Питание — листы ============ */
 function foodRow(f,g,act='pickFood',extra=''){ const gg=g||(f.por[0]?f.por[0].g:100); const n=scale(f,gg);
- return `<button class="li" data-a="${act}" data-id="${f.id}" data-g="${gg}" ${extra}><span class="li-m"><span class="li-t">${esc(f.n)}</span><span class="li-s">${g?fmt(gg,0)+' г':f.por[0]?f.por[0].l+' '+f.por[0].g+' г':'100 г'} · ${kc(n.kcal)} ккал${haveG(f.id)>0?' · <span class="good-t">есть дома</span>':''}</span></span><span class="chev">${ic('plus',18)}</span></button>`; }
+ return `<button class="li" data-a="${act}" data-id="${f.id}" data-g="${gg}" ${extra}><span class="li-m"><span class="li-t">${esc(f.n)}</span><span class="li-s">${g?fmt(gg,0)+' г':f.por[0]?f.por[0].l+' '+f.por[0].g+' г':'100 г'} · ${kc(n.kcal)} ккал${haveG(f.id)>0?' · <span class="good-t">есть дома</span>':''}${pregTag(f,gg)}</span></span><span class="chev">${ic('plus',18)}</span></button>`; }
 SH.add=()=>{ const a=ui.add||(ui.add={meal:mealOfNow(),q:'',mode:'log'}); const pick=a.mode!=='log';
  let b=pick?'':seg(Object.entries(MEALS),'addMeal',a.meal,'Приём пищи');
  b+=`<div class="search">${ic('search',18)}<input class="inp" id="fq" type="search" placeholder="Например, гречка или яблоко" aria-label="Поиск продукта" value="${esc(a.q)}" data-i="fq" autocomplete="off" enterkeyhint="search"></div><div id="fres" class="col">${addResults()}</div>`;
@@ -1060,6 +1106,7 @@ function addResults(){ const a=ui.add; const q=a.q.trim(); const pick=a.mode!=='
 SH.amount=()=>{ const x=ui.amt; if(!x) return sheet({title:'',body:''}); const f=food(x.f); if(!f) return sheet({title:'Продукт удалён',body:''});
  const g=kpValue(ui.kp.v); const n=scale(f,g);
  let b=`<div class="col-xs"><h2 class="h2">${esc(f.n)}</h2><span class="note">${kc(f.kcal)} ккал · Б ${fmt(f.p,1)} · Ж ${fmt(f.f,1)} · У ${fmt(f.c,1)} на 100 г</span></div>`;
+ const pw=pregP()&&pregFood(f); if(pw){ const cf=cafPer100(f); b+=`<div class="callout ${pw.lvl==='no'?'bad':'warn'}"><p>${ic('baby',14)} ${esc(pw.t)}.${cf&&g?` В этой порции ≈ ${Math.round(cf*g/100)} мг кофеина, сегодня уже ${Math.round(dayCaf(ui.day))} мг.`:''}</p></div>`; }
  if(x.mode==='log'&&!x.edit) b+=seg(Object.entries(MEALS),'amtMeal',x.meal,'Приём пищи');
  else if(x.edit) b+=seg(Object.entries(MEALS),'amtMeal',x.meal,'Приём пищи');
  b+=`<div class="amt"><span class="amt-v${g?'':' empty'}">${g?fmt(g,1):'0'} г</span><span class="amt-x">${g?`${kc(n.kcal)} ккал · Б ${fmt(n.p,0)} · Ж ${fmt(n.f,0)} · У ${fmt(n.c,0)}`:'введите вес'}</span></div>`;
@@ -1081,11 +1128,12 @@ SH.act=()=>{ const k=ui.day; const a=activity(k); const d=dayRec(k);
  b+=`<div class="chips">${[[100,'Прогулка 30 мин'],[250,'Прогулка час'],[300,'Велосипед 45 мин'],[400,'Тренировка']].map(([v,l])=>`<button class="chip" data-a="actAdd" data-v="${v}">+${v} · ${l}</button>`).join('')}</div>`;
  return sheet({title:'Активность',body:b}); };
 SH.norm=()=>{ const P=S.profile; const N=normKcal(), mt=macroTargets(), B=Math.round(bmr(P)); const T=Family.read('telo');
- let b=`<section class="card dark hero"><span class="lbl">Норма в день</span><span class="hero-v">${kc(N)} <small>ккал</small></span><p class="note">Базовый обмен ${kc(B)} × активность ${fmt(ACT[P.act][0],3)} × цель ${fmt(GOALS[P.goal][0],2)}</p><div class="kv" style="color:var(--on-dark)"><span>Белки</span><span>${mt.p} г</span><span>Жиры</span><span>${mt.f} г</span><span>Углеводы</span><span>${mt.c} г</span></div></section>`;
+ const pi=pregP(P); const B0=pi?Math.round(bmr(Object.assign({},P,{kg:P.preg.kg0||P.kg}))):B;
+ let b=`<section class="card dark hero"><span class="lbl">Норма в день</span><span class="hero-v">${kc(N)} <small>ккал</small></span><p class="note">${pi?`Базовый обмен ${kc(B0)} (по весу до беременности) × активность ${fmt(ACT[P.act][0],3)} + ${PREG_ADD[pi.tri]} ккал за ${['I','II','III'][pi.tri-1]} триместр`:`Базовый обмен ${kc(B)} × активность ${fmt(ACT[P.act][0],3)} × цель ${fmt(GOALS[P.goal][0],2)}`}</p><div class="kv" style="color:var(--on-dark)"><span>Белки</span><span>${mt.p} г</span><span>Жиры</span><span>${mt.f} г</span><span>Углеводы</span><span>${mt.c} г</span></div></section>`;
  if(T&&T.state.profile) b+=`<button class="btn sec blk" data-a="fromTelo">${ic('pulse',18)} Взять рост, вес и возраст из Ритм·Тело</button>`;
  b+=`<section class="card col-s"><span class="lbl">Пол</span>${seg([['m','Мужской'],['f','Женский']],'psex',P.sex)}<div class="split">${stepper('Возраст',P.age,'age')}${stepper('Рост, см',P.h,'h')}</div>${stepper('Вес, кг',P.kg,'kg','',true)}</section>`;
  b+=`<section class="card col-s"><h2 class="sec-h">Активность вне тренировок</h2>${Object.entries(ACT).map(([k,v])=>`<button class="opt" data-a="pact" data-v="${k}" aria-pressed="${P.act===k}"><span class="b">${v[1]}</span><span class="note">${v[2]}</span></button>`).join('')}</section>`;
- b+=`<section class="card col-s"><h2 class="sec-h">Цель</h2>${seg(Object.entries(GOALS).map(([k,v])=>[k,v[1]]),'pgoal',P.goal)}<p class="note">${GOALS[P.goal][2]}. Белок — 1,6 г на кг веса, жиры — 30 % калорий, остальное — углеводы.</p></section>`;
+ b+=pi?`<section class="card col-s"><h2 class="sec-h">${ic('baby',18)} Беременность</h2><p class="p">${pregLabel(pi)}. Худеть во время беременности не рекомендуется, поэтому цель — без снижения, а к норме прибавляется энергия по триместру: I — 0, II — +340, III — +452 ккал (IOM).</p><p class="note">Белок — не меньше 71 г в день, жиры — 30 % калорий.</p><button class="btn sec sm self-start" data-a="push" data-s="preg">Подробнее</button></section>`:`<section class="card col-s"><h2 class="sec-h">Цель</h2>${seg(Object.entries(GOALS).map(([k,v])=>[k,v[1]]),'pgoal',P.goal)}<p class="note">${GOALS[P.goal][2]}. Белок — 1,6 г на кг веса, жиры — 30 % калорий, остальное — углеводы.</p></section>`;
  b+=`<p class="note">Формула Миффлина — Сан Жеора. Тренировки и шаги прибавляются к норме каждый день отдельно${Family.has('telo')?' — из Ритм·Тело':''}.</p>`;
  return sheet({title:'Норма калорий',body:b}); };
 SH.micro=top=>{ const key=top.id; const i=MIC.indexOf(key); const [nm,u]=MIC_N[key]; const Nm=norms(S.profile); const v=dayTotalsN(ui.day).m[i];
@@ -1132,6 +1180,7 @@ SH.myrec=()=>{ const r=ui.mr; if(!r) return sheet({title:'',body:''});
  return sheet({title:r.id?'Изменить рецепт':'Свой рецепт',left:'close',body:b,foot:`<button class="btn pri blk" data-a="myrecSave"${r.n.trim()&&r.ing.length?'':' disabled'}>Сохранить рецепт</button>`}); };
 
 SH.settings=()=>{ const P=S.profile; let b=`<section class="list"><button class="li" data-a="push" data-s="norm"><span class="ico">${ic('fire',20)}</span><span class="li-m"><span class="li-t">Норма калорий</span><span class="li-s">${kc(normKcal())} ккал · ${GOALS[P.goal][1].toLowerCase()}</span></span><span class="chev">${ic('right',18)}</span></button></section>`;
+ if(P.sex==='f'||P.preg){ const pi=pregP(P); b+=`<section class="card col-s"><h2 class="sec-h">${ic('baby',18)} Беременность</h2><p class="p">${pi?pregLabel(pi)+' · '+pregLeft(pi):'Норма калорий, витамины и минералы подстроятся под срок, а Ритм подскажет, какие продукты лучше исключить.'}</p><div class="row wrap gap6"><button class="btn ${pi?'sec':'pri'} sm" data-a="pregOpen">${pi?'Изменить срок':'Включить режим беременности'}</button>${pi?'<button class="btn ghost sm" data-a="push" data-s="preg">Подробнее</button>':''}</div></section>`; }
  b+=`<section class="card col-s"><h2 class="sec-h">Вода</h2>${stepper('Цель, стаканов по 250 мл',S.water,'water')}<p class="note">Обычно 30 мл на кг веса — для вас около ${fmt(P.kg*.03,1)} л (${Math.round(P.kg*30/250)} стаканов).</p></section>`;
  const R=Object.assign({exp:true,time:'10:00',log:false,logTime:'20:00'},S.remind||{});
  b+=remindCard(`<div class="chips"><button class="chip" data-a="remTog" data-v="exp" aria-pressed="${R.exp}">Сроки продуктов</button><button class="chip" data-a="remTog" data-v="log" aria-pressed="${R.log}">Записать еду вечером</button></div>${R.exp?`<span class="lbl">О сроках — накануне в</span>${timeChips('remTime',R.time,['08:00','09:00','10:00','12:00','18:00'])}`:''}${R.log?`<span class="lbl">Записать еду — в</span>${timeChips('remLogTime',R.logTime,['19:00','20:00','21:00','22:00'])}`:''}`);
@@ -1144,12 +1193,34 @@ SH.onboard=()=>{ const o=ui.ob||(ui.ob={step:1}); const P=S.profile; const T=Fam
   foot=`<div class="split"><button class="btn sec" data-a="obPrev">Назад</button><button class="btn pri" data-a="obDone">Готово</button></div>`; }
  return sheet({title:'Ритм·Питание',left:'',body:b,foot}); };
 
+/* ---------- Беременность ---------- */
+function pregTag(f,g){ if(!pregP()) return ''; const w=pregFood(f); if(!w) return ''; if(w.lvl==='caf'){ const c=Math.round(cafPer100(f)*(g||100)/100); return c?` · <span class="warn-t">кофеин ${c} мг</span>`:''; }
+ return ` · <span class="${w.lvl==='no'?'bad-t':'warn-t'} b">${w.lvl==='no'?'при беременности — исключить':w.lvl==='limit'?'при беременности — ограничить':'только хорошо приготовленные'}</span>`; }
+SH.pregSet=()=>{ const g=ui.pg||(ui.pg={mode:'due',due:'',lmp:'',kg0:S.profile.kg}); const due=g.mode==='lmp'?(g.lmp?dueFromLmp(g.lmp):''):g.due; const i=due?pregInfo({on:true,due}):null; const on=!!pregP();
+ let b=`<p class="p">Ритм подстроит норму калорий, витамины и минералы под срок, посчитает кофеин и подскажет, какие продукты лучше исключить.</p>`;
+ b+=seg([['due','Знаю дату родов'],['lmp','Знаю дату месячных']],'pregMode',g.mode,'Как указать срок');
+ b+=g.mode==='lmp'?`<label class="fld"><span class="lbl">Первый день последних месячных</span><input class="inp" type="date" value="${esc(g.lmp||'')}" max="${dkey()}" data-c="pgDate" data-k="lmp"></label>`:`<label class="fld"><span class="lbl">Предполагаемая дата родов (ПДР)</span><input class="inp" type="date" value="${esc(g.due||'')}" data-c="pgDate" data-k="due"></label>`;
+ if(due) b+=i?`<div class="callout acc"><p class="b">${ic('baby',16)} ${pregLabel(i)}</p><p>${pregLeft(i)}${g.mode==='lmp'?' · ПДР '+fmtDayG(due):''}</p></div>`:`<div class="callout warn"><p>Срок получается вне 0–42 недель — проверьте дату.</p></div>`;
+ b+=stepper('Вес до беременности, кг',g.kg0||S.profile.kg,'kg0','',true);
+ b+=`<p class="note">По весу до беременности считаются обмен веществ и рекомендуемая прибавка. Когда врач уточнит срок по УЗИ, поменяйте дату здесь. В Android и iPhone срок общий для Питания и Тела.</p>`;
+ return sheet({title:'Беременность',left:'close',body:b,foot:`<button class="btn pri blk" data-a="pregSave">${on?'Сохранить':'Включить режим беременности'}</button>${on?'<button class="btn ghost blk" data-a="pregOff">Выключить режим беременности</button>':''}`}); };
+SH.preg=()=>{ const P=S.profile, i=pregP(P); if(!i) return sheet({title:'Беременность',body:'<p class="p">Режим беременности выключен.</p>'}); const N=norms(P); const caf=Math.round(dayCaf(dkey()));
+ let b=`<section class="card dark hero"><span class="lbl">${ic('baby',14)} Беременность</span><span class="hero-v" style="font-size:28px">${i.w} нед${i.dd?' '+i.dd+' дн':''}</span><p class="note">${['I','II','III'][i.tri-1]} триместр · ${pregLeft(i)} · ПДР ${fmtDayG(P.preg.due)}</p></section>`;
+ b+=`<section class="card col-s"><h2 class="sec-h">Что изменилось в Ритме</h2><ul class="cues"><li>Норма — ${kc(normKcal())} ккал: обмен по весу до беременности ${PREG_ADD[i.tri]?'+ '+PREG_ADD[i.tri]+' ккал за '+['I','II','III'][i.tri-1]+' триместр':'без прибавки в I триместре'}.</li><li>Белок — не меньше 71 г в день.</li><li>Витамины и минералы — по нормам для беременных: фолат ${N.fol} мкг, железо ${N.fe} мг, витамин D ${N.d} мкг, кальций ${N.ca} мг, B12 ${String(N.b12).replace(".",",")} мкг, цинк ${N.zn} мг.</li><li>Кофеин считается сам: сегодня ${caf} из 200 мг.</li><li>У рискованных продуктов в поиске — пометка.</li></ul></section>`;
+ const kg0=P.preg.kg0; if(kg0&&P.h){ const [lo,hi,g]=gwgRange(i,kg0,P.h); const now=P.kg-kg0;
+  b+=`<section class="card col-s"><h2 class="sec-h">Прибавка веса</h2><p class="p">Сейчас ${now>=0?'+':'−'}${fmt(Math.abs(now),1)} кг от веса до беременности. На ${i.w}-й неделе обычно +${fmt(lo,1)}…${fmt(hi,1)} кг, за всю беременность — ${fmt(g.t[0],1)}–${fmt(g.t[1],1)} кг (${g.n}).</p><p class="note">Рекомендации IOM 2009 для одноплодной беременности. Текущий вес — в «Норме калорий»; график веса — в Ритм·Тело.</p></section>`; }
+ b+=`<section class="card col-s"><h2 class="sec-h">Лучше исключить или ограничить</h2><ul class="cues">${PREG_FOOD.filter(r=>r.lvl!=='info').map(r=>`<li>${esc(r.t)}.</li>`).join('')}<li>Яйца — только хорошо приготовленные; мясо — без розового и крови.</li></ul></section>`;
+ b+=`<section class="card col-s"><h2 class="sec-h">Чего нет в базе Ритма</h2><p class="p">Йод (220 мкг), холин (450 мг) и омега-3 (DHA) по продуктам не считаются — обычно их получают с витаминами для беременных. Что и сколько принимать — решает врач.</p></section>`;
+ b+=`<div class="callout mut"><p>Это общие рекомендации (NIH ODS, IOM, NHS / Tommy's), а не замена врачу. Если врач дал другие нормы — ориентируйтесь на него.</p></div><button class="btn sec self-start" data-a="pregOpen">Изменить срок</button>`;
+ return sheet({title:'Беременность',body:b}); };
+
 /* ============ Ритм·Питание — действия ============ */
 function curHome(){ const t=topSheet(); if(t&&t.type==='hitem') return t.id==='new'?ui.hnew:S.home.find(x=>x.id===t.id); return null; }
 function ACC_FN(k,x){ const P=S.profile;
  if(k==='age') return {get:()=>P.age,set:v=>P.age=clamp(Math.round(v),14,100),step:1};
  if(k==='h') return {get:()=>P.h,set:v=>P.h=clamp(Math.round(v),120,230),step:1};
  if(k==='kg') return {get:()=>P.kg,set:v=>P.kg=clamp(r1(v),30,300),step:.5};
+ if(k==='kg0') return {get:()=>(ui.pg&&ui.pg.kg0)||P.kg,set:v=>{ ui.pg=ui.pg||{}; ui.pg.kg0=clamp(r1(v),30,300); },step:.5};
  if(k==='water') return {get:()=>S.water,set:v=>S.water=clamp(Math.round(v),1,20),step:1};
  if(k==='act') return {get:()=>{ const d=dayRec(ui.day); return d&&d.act||0; },set:v=>{ const d=dayRec(ui.day,true); d.act=clamp(Math.round(v),0,5000); touchDay(ui.day); },step:50};
  if(k==='mrsrv') return {get:()=>ui.mr.srv,set:v=>ui.mr.srv=clamp(Math.round(v),1,20),step:1};
@@ -1194,6 +1265,12 @@ Object.assign(A,{
   S.custom.push(f); ui.cust=null; ui.stack.pop(); Store.save(); A.pickFood({id:f.id}); },
  actAdd:d=>{ const r=dayRec(ui.day,true); r.act=(r.act||0)+Number(d.v); touchDay(ui.day); commit(); },
  psex:d=>{ S.profile.sex=d.v; commit(); },
+ pregOpen:()=>{ const p=S.profile.preg||{}; ui.pg={on:p.on!==false,mode:'due',due:p.due||'',lmp:'',kg0:p.kg0||S.profile.kg}; ui.stack.push({type:'pregSet'}); render(); },
+ pregMode:d=>{ ui.pg.mode=d.v; render(); },
+ pregSave:()=>{ const g=ui.pg; const due=g.mode==='lmp'?(g.lmp?dueFromLmp(g.lmp):''):g.due; if(!due){ toast(g.mode==='lmp'?'Укажите первый день последних месячных':'Укажите предполагаемую дату родов'); return; }
+  const i=pregInfo({on:true,due}); if(!i){ toast('Проверьте дату: срок получается вне 0–42 недель'); return; }
+  S.profile.sex='f'; S.profile.preg=pregPut({on:true,due,kg0:g.kg0||S.profile.kg}); ui.pg=null; ui.stack.pop(); commit(); toast('Режим беременности: '+pregLabel(i)); },
+ pregOff:()=>{ S.profile.preg=pregPut(Object.assign({},S.profile.preg,{on:false})); ui.pg=null; ui.stack.pop(); commit(); toast('Режим беременности выключен'); },
  pact:d=>{ S.profile.act=d.v; commit(); },
  pgoal:d=>{ S.profile.goal=d.v; commit(); },
  fromTelo:()=>{ const T=Family.read('telo'); if(!T) return; const p=T.state.profile; Object.assign(S.profile,{sex:p.sex==='f'?'f':'m',age:p.age||S.profile.age,h:p.h||S.profile.h,kg:p.kg||S.profile.kg}); if(ui.ob) ui.ob.tl=true; commit(); toast('Данные взяты из Ритм·Тело'); },
@@ -1238,7 +1315,7 @@ Object.assign(A,{
  obNext:()=>{ ui.ob.step=2; render(); }, obPrev:()=>{ ui.ob.step=1; render(); },
  obDone:()=>{ S.setup=true; ui.ob=null; ui.stack=[]; ui.tab='today'; commit(); toast('Готово! Добавляйте еду кнопкой «+»'); }
 });
-Object.assign(C,{
+Object.assign(C,{ pgDate:(d,t)=>{ ui.pg[d.k]=t.value; render(); },
  hexpIn:(d,t)=>{ const it=curHome(); if(it){ it.exp=t.value||null; if(topSheet().id!=='new') Store.save(); render(); } }
 });
 Object.assign(I,{

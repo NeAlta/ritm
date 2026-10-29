@@ -16,7 +16,14 @@ function remember(id){ try{ localStorage.setItem('ritm-ios-last',id); }catch(e){
 function glyph(a,size){ return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="#17161A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+a.g+'"/></svg>'; }
 var standalone=window.navigator.standalone===true||!!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
 var ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
-window.RITM_APPS=APPS; window.RITM_GLYPH=glyph; window.RITM_STANDALONE=standalone; window.RITM_ISIOS=ios;
+var android=/Android/i.test(navigator.userAgent);
+window.RITM_APPS=APPS; window.RITM_GLYPH=glyph; window.RITM_STANDALONE=standalone; window.RITM_ISIOS=ios; window.RITM_ISANDROID=android;
+/* Android (Chrome): системное предложение установить приложение — показываем своей кнопкой */
+var deferred=null;
+window.addEventListener('beforeinstallprompt',function(e){ e.preventDefault(); deferred=e; try{ window.dispatchEvent(new Event('ritm-installable')); }catch(x){} });
+window.addEventListener('appinstalled',function(){ deferred=null; var h=document.querySelector('.rhint'); if(h) h.remove(); });
+window.RITM_CAN_INSTALL=function(){ return !!deferred; };
+window.RITM_INSTALL=function(){ if(!deferred) return false; deferred.prompt(); var d=deferred; deferred=null; if(d.userChoice&&d.userChoice.then) d.userChoice.then(function(){}); return true; };
 if(byId(cur)) remember(byId(cur).id);
 
 /* Переход в соседнее приложение: сначала сохранить данные текущего */
@@ -49,9 +56,11 @@ function markBrands(){ var L=document.querySelectorAll('.top .brand:not([role])'
 function syncTheme(){ var m=document.querySelector('meta[name="theme-color"]'); if(!m||!document.body) return; var c=getComputedStyle(document.body).backgroundColor; if(c&&c!=='rgba(0, 0, 0, 0)'&&m.getAttribute('content')!==c) m.setAttribute('content',c); }
 
 /* Подсказка в Safari: установить на экран «Домой», чтобы данные жили в приложении */
-function hint(){ if(!ios||standalone||cur==='start') return; try{ if(localStorage.getItem('ritm-ios-hint')) return; }catch(e){}
+function hint(){ if((!ios&&!android)||standalone||cur==='start') return; try{ if(localStorage.getItem('ritm-ios-hint')) return; }catch(e){}
  var h=document.createElement('div'); h.className='rhint'; h.setAttribute('role','note');
- h.innerHTML='<p><b>Установите Ритм на iPhone.</b> Нажмите «Поделиться» <span class="rhint-i" aria-hidden="true">'+shareIcon()+'</span> внизу Safari и выберите «На экран Домой». Данные из Safari в приложение не переносятся — начинайте в приложении.</p><button type="button" class="rhint-x" aria-label="Скрыть подсказку">✕</button>';
+ h.innerHTML=ios?'<p><b>Установите Ритм на iPhone.</b> Нажмите «Поделиться» <span class="rhint-i" aria-hidden="true">'+shareIcon()+'</span> внизу Safari и выберите «На экран Домой». Данные из Safari в приложение не переносятся — начинайте в приложении.</p><button type="button" class="rhint-x" aria-label="Скрыть подсказку">✕</button>'
+  :'<p><b>Установите Ритм на телефон.</b> <span class="rhint-a">В Chrome: меню ⋮ → «Установить приложение» или «Добавить на главный экран».</span></p><button type="button" class="rhint-x" aria-label="Скрыть подсказку">✕</button>';
+ if(android){ var upd=function(){ var a=h.querySelector('.rhint-a'); if(a&&deferred&&!h.querySelector('.rhint-b')){ var b=document.createElement('button'); b.type='button'; b.className='rhint-b'; b.textContent='Установить'; b.addEventListener('click',function(){ window.RITM_INSTALL(); }); a.parentNode.appendChild(b); } }; upd(); window.addEventListener('ritm-installable',upd); }
  h.querySelector('.rhint-x').addEventListener('click',function(){ try{ localStorage.setItem('ritm-ios-hint','1'); }catch(e){} h.remove(); });
  document.body.appendChild(h); }
 function shareIcon(){ return '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M8 7l4-4 4 4M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>'; }

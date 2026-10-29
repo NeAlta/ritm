@@ -497,6 +497,39 @@ const Family={
  canOpen(){ try{ return !!(window.RitmNative&&window.RitmNative.open); }catch(e){ return false; } }
 };
 
+/* ---------- Беременность: одна запись на все приложения ----------
+   p = {on, due:'ГГГГ-ММ-ДД' (предполагаемая дата родов), kg0 (вес до беременности), u (время правки)}.
+   В Android и iPhone приложения делят её через localStorage (ключ ritm-preg-state-v1 входит в копию всего Ритма). */
+const PREG_K='ritm-preg-state-v1';
+function pregInfo(p,k=dkey()){ if(!p||!p.on||!p.due) return null; const left=dBetween(k,p.due); const d=280-left; if(d<0||d>301) return null; return {d,w:Math.floor(d/7),dd:d%7,tri:d<98?1:d<196?2:3,left}; }
+function pregLabel(i){ return `${i.w} нед${i.dd?' '+i.dd+' дн':''} · ${['I','II','III'][i.tri-1]} триместр`; }
+function pregLeft(i){ return i.left>0?`до родов ${pl(Math.ceil(i.left/7),['неделя','недели','недель'])}`:i.left===0?'срок родов сегодня':'срок родов прошёл'; }
+function pregShared(){ return typeof window!=='undefined'&&window.RITM_APP?lsGet(PREG_K):null; }
+function pregPick(local){ const sh=pregShared(); if(sh&&(!local||(sh.u||0)>(local.u||0))) return sh; return local||null; }
+function pregPut(p){ p=Object.assign({},p,{u:Date.now()}); if(typeof window!=='undefined'&&window.RITM_APP) lsSet(PREG_K,p); return p; }
+function dueFromLmp(lmp){ return addDays(lmp,280); }
+/* прибавка веса по IOM 2009: [итого, кг] и [в неделю во II–III триместре, кг] по ИМТ до беременности */
+const GWG={under:{n:'ИМТ до беременности меньше 18,5',t:[12.5,18],r:[.44,.58]},normal:{n:'ИМТ 18,5–24,9',t:[11.5,16],r:[.35,.50]},over:{n:'ИМТ 25–29,9',t:[7,11.5],r:[.23,.33]},obese:{n:'ИМТ 30 и больше',t:[5,9],r:[.17,.27]}};
+function gwgCat(kg0,h){ const b=kg0/Math.pow(h/100,2); return b<18.5?'under':b<25?'normal':b<30?'over':'obese'; }
+function gwgRange(i,kg0,h){ const g=GWG[gwgCat(kg0,h)]; const d=Math.min(i.d,280); if(d<=91) return [.5*d/91,2*d/91,g]; const wk=(d-91)/7; return [.5+wk*g.r[0],2+wk*g.r[1],g]; }
+/* продукты при беременности: id базы Питания и слова в названии */
+const PREG_FOOD=[
+ {re:/печен|паштет|liver/i,ids:['liver'],lvl:'no',t:'Печень и паштеты — лучше исключить: много витамина A, паштеты — риск листерий'},
+ {re:/кумыс|шубат|пив|(^|[^а-яё])вин(о|а)([^а-яё]|$)|водк|коньяк|виски|шампан|алкогол/i,ids:['kumys','beer'],lvl:'no',t:'Алкоголь — безопасного количества нет. Кумыс и шубат — напитки брожения, в кумысе бывает до 4 % спирта'},
+ {re:/суши|ролл|сашими|слабосол|малосол|копч(ён|ен)[а-я]* (рыб|лосос|сёмг|семг)|сельд|селёдк|сырая рыба/i,ids:['herring'],lvl:'no',t:'Сырая, слабосолёная и холодного копчения рыба — риск листерий; можно только прогретой до горячего'},
+ {re:/(^|[^а-яё])бри([^а-яё]|$)|камамбер|дор ?блю|горгонзол|рокфор|с плесенью/i,lvl:'no',t:'Мягкие сыры с плесенью — только прогретые до горячего (листерии)'},
+ {re:/акул|меч-рыб|марлин/i,lvl:'no',t:'Много ртути — исключить'},
+ {re:/сырое молоко|парное|непастер/i,lvl:'no',t:'Непастеризованное молоко — только после кипячения'},
+ {re:/тунец|tuna/i,ids:['tuna'],lvl:'limit',t:'Тунец — не больше 4 банок в неделю (ртуть)'},
+ {re:/казы|шужук|сыровял|салями|вялен/i,ids:['kazy'],lvl:'limit',t:'Казы и вяленые колбасы — только хорошо проваренные, горячими'},
+ {re:/лосос|сёмг|семг|скумбр/i,ids:['salmon'],lvl:'limit',t:'Жирная рыба полезна, но не чаще 2 раз в неделю'},
+ {re:/энергет|кофе|эспрессо|капучин|латте|американо|кола|(^|[^а-яё])чай([^а-яё]|$)/i,ids:['coffee','cappuccino','tea','cola','choc_dark'],lvl:'caf',t:'Кофеин — не больше 200 мг в день'},
+ {re:/яйц/i,ids:['egg'],lvl:'info',t:'Яйца — только хорошо приготовленные, без жидкого желтка'}];
+function pregFood(f){ if(!f) return null; for(const r of PREG_FOOD){ if((r.ids&&r.ids.includes(f.id))||r.re.test(f.n||'')) return r; } return null; }
+/* кофеин, мг на 100 г — средние значения (USDA FoodData Central) */
+const CAF={coffee:40,cappuccino:35,tea:20,cola:10,choc_dark:80,choc_milk:20};
+function cafPer100(f){ if(!f) return 0; if(CAF[f.id]!=null) return CAF[f.id]; const n=f.n||''; if(/эспрессо/i.test(n)) return 212; if(/энергет/i.test(n)) return 32; if(/капучин|латте/i.test(n)) return 35; if(/кофе|американо/i.test(n)) return 40; if(/зел[её]н[а-я]* чай/i.test(n)) return 12; if(/(^|[^а-яё])чай([^а-яё]|$)/i.test(n)) return 20; if(/кола/i.test(n)) return 10; return 0; }
+
 /* ---------- Телефон: уведомления, отправка ---------- */
 const Native={
  ok(){ try{ return !!(window.RitmNative&&window.RitmNative.notifyAt); }catch(e){ return false; } },
@@ -518,7 +551,7 @@ function syncReminders(){ clearTimeout(remT); remT=setTimeout(()=>{ if(!Native.o
 function remindPrompt(){ if(!Native.ok()||Native.can()||!S.remind||S.remind.on===false||S.remind.later) return '';
  return `<div class="callout acc"><p class="b">${ic('bell',16)} Включить напоминания?</p><p>${APP.remindWhy||'Ритм напомнит о важном уведомлением.'}</p><div class="row wrap gap6"><button class="btn pri sm" data-a="remAsk">Разрешить</button><button class="btn ghost sm" data-a="remLater" style="color:inherit">Не сейчас</button></div></div>`; }
 function remindCard(inner=''){ const R=S.remind||{};
- if(!Native.ok()) return `<section class="card col-s"><h2 class="sec-h">Напоминания</h2><p class="p">${APP.remindWhy||''} ${window.RITM_IOS?'На iPhone веб-приложение не может присылать уведомления по расписанию — это ограничение Apple. Напоминания работают в Android-версии Ритма.':'Уведомления работают в Android-версии Ритма.'}</p></section>`;
+ if(!Native.ok()) return `<section class="card col-s"><h2 class="sec-h">Напоминания</h2><p class="p">${APP.remindWhy||''} ${window.RITM_IOS?(window.RITM_ISIOS?'На iPhone веб-приложение не может присылать уведомления по расписанию — это ограничение Apple. Напоминания работают в Android-приложении Ритма.':'В веб-версии напоминания по расписанию не приходят — они работают в Android-приложении Ритма (APK).'):'Уведомления работают в Android-версии Ритма.'}</p></section>`;
  const can=Native.can();
  return `<section class="card col-s"><div class="between"><h2 class="sec-h">Напоминания</h2><button class="chip" data-a="remOn" aria-pressed="${R.on!==false}">${R.on!==false?'Включены':'Выключены'}</button></div>${R.on!==false&&!can?`<div class="callout warn"><p>Телефон не разрешает уведомления Ритма.</p><button class="btn ghost" data-a="remAsk">Разрешить</button></div>`:''}${R.on!==false?inner:''}</section>`; }
 function timeChips(act,cur,list=['08:00','09:00','10:00','12:00','18:00','20:00','21:00']){ return `<div class="chips">${list.map(t=>`<button class="chip" data-a="${act}" data-v="${t}" aria-pressed="${cur===t}">${t}</button>`).join('')}</div>`; }
@@ -532,9 +565,9 @@ async function retry(fn){ try{ return await fn(); }catch(e){ if(e&&(e.code==='un
 function errText(e){ const c=e&&e.code; if(c==='quota_exceeded') return 'Облако заполнено — удалите старые данные или сделайте резервную копию'; if(c==='revoked'||c==='not_granted') return 'Нет доступа к облаку — изменения сохранены на этом устройстве'; return 'Не удалось сохранить в облако — изменения есть на этом устройстве'; }
 const Store={
  mode:'local',ref:null,col:null,timer:null,dirty:new Set(),
- loadLocal(){ const s=lsGet(LS_S()); S=APP.normalize(s||null); const b=lsGet(LS_B()); B=b&&typeof b==='object'?b:{}; LSRAW[LS_S()]=lsRaw(LS_S()); LSRAW[LS_B()]=lsRaw(LS_B()); if(APP.onData) APP.onData(); },
+ loadLocal(){ const s=lsGet(LS_S()); S=APP.normalize(s||null); const b=lsGet(LS_B()); B=b&&typeof b==='object'?b:{}; LSRAW[LS_S()]=lsRaw(LS_S()); LSRAW[LS_B()]=lsRaw(LS_B()); LSRAW[PREG_K]=lsRaw(PREG_K); if(APP.onData) APP.onData(); },
  /* Другое приложение семейства (или восстановление копии) могло изменить наши данные — перечитать */
- changedOutside(){ return this.mode!=='db'&&(lsRaw(LS_S())!==LSRAW[LS_S()]||lsRaw(LS_B())!==LSRAW[LS_B()]); },
+ changedOutside(){ return this.mode!=='db'&&(lsRaw(LS_S())!==LSRAW[LS_S()]||lsRaw(LS_B())!==LSRAW[LS_B()]||lsRaw(PREG_K)!==LSRAW[PREG_K]); },
  async init(){
   let db=null,user=null;
   try{ if(window.claude&&typeof window.claude.use==='function'){ [db,user]=await Promise.all([window.claude.use('db'),window.claude.use('user')]); } }catch(e){}
@@ -560,7 +593,7 @@ const Store={
  async reset(){ const old=Object.keys(B); S=APP.normalize(null); B={}; lsSet(LS_S(),S); lsSet(LS_B(),B); if(APP.onData) APP.onData(); if(this.mode==='db'){ try{ await this.ref.set(clone(S)); for(const k of old) await this.col.doc(k).delete(); }catch(e){ toast(errText(e)); } } }
 };
 function bucket(k,make){ if(!B[k]&&make) B[k]=make(); return B[k]||null; }
-function storageText(){ if(Store.mode==='db') return 'Сохраняются в вашем аккаунте Claude и видны только вам.'; if(typeof window!=='undefined'&&window.RITM_IOS) return 'Хранятся только на этом iPhone, внутри значка «Ритм». Если удалить значок с экрана «Домой», данные сотрутся — делайте копию всего Ритма и сохраняйте её в Заметки или Файлы.'; if(typeof window!=='undefined'&&window.RITM_APP) return 'Хранятся только на этом телефоне. Делайте резервную копию перед сменой телефона или удалением приложения.'; return 'Сохраняются только в этом браузере. Откройте приложение в Claude, чтобы данные хранились в аккаунте.'; }
+function storageText(){ if(Store.mode==='db') return 'Сохраняются в вашем аккаунте Claude и видны только вам.'; if(typeof window!=='undefined'&&window.RITM_IOS) return window.RITM_ISIOS?'Хранятся только на этом iPhone, внутри значка «Ритм». Если удалить значок с экрана «Домой», данные сотрутся — делайте копию всего Ритма и сохраняйте её в Заметки или Файлы.':'Хранятся только на этом телефоне, в веб-версии Ритма. Если удалить её значок или очистить данные браузера, данные могут стереться — делайте копию всего Ритма и сохраняйте её в Файлы или мессенджер.'; if(typeof window!=='undefined'&&window.RITM_APP) return 'Хранятся только на этом телефоне. Делайте резервную копию перед сменой телефона или удалением приложения.'; return 'Сохраняются только в этом браузере. Откройте приложение в Claude, чтобы данные хранились в аккаунте.'; }
 
 /* ---------- Интерфейс: состояние, листы, рендер ---------- */
 const ui={tab:null,stack:[],confirm:null,booting:true,lastDepth:0,lastTop:'',backup:null,bkText:'',bkData:null,kp:null};
@@ -767,7 +800,9 @@ function monthRange(off=0){ const d=new Date(); d.setDate(1); d.setMonth(d.getMo
 const MONTHS_IN=['январе','феврале','марте','апреле','мае','июне','июле','августе','сентябре','октябре','ноябре','декабре'];
 
 /* ---------- тренировки (из Ритм·Тело) ---------- */
-function bodyOf(id){ const f=(Fam.data(cur()).body||{})[id]; return f&&!f.x&&f.d?f.d.days||{}:null; }
+function bodyOf(id){ const f=(Fam.data(cur()).body||{})[id]; return f&&!f.x&&f.d&&f.d.days?f.d.days:null; }
+function pregOfM(id){ const f=(Fam.data(cur()).body||{})[id]; const p=f&&!f.x&&f.d&&f.d.preg; return p?pregInfo({on:true,due:p.due}):null; }
+function pregDue(id){ const f=(Fam.data(cur()).body||{})[id]; return f&&f.d&&f.d.preg?f.d.preg.due:null; }
 function weekKeys(){ const t=dkey(); const w=wdi(t); const mon=addDays(t,-w); return [0,1,2,3,4,5,6].map(i=>addDays(mon,i)); }
 function money(v){ return (v<0?'−':'')+fmt(Math.abs(Math.round(v)),0)+' ₸'; }
 function openUrl(u){ try{ if(window.RitmNative&&window.RitmNative.openUrl){ window.RitmNative.openUrl(u); return; } }catch(e){} window.open(u,'_blank','noopener'); }
@@ -788,13 +823,13 @@ function taskRowF(t,k){ const done=tDone(t,k); const od=!t.rep&&t.date&&t.date<k
 function addTaskRow(){ return `<div class="addrow"><input class="inp sm" id="ftIn" type="text" placeholder="Задача для семьи на сегодня" maxlength="120" data-enter="ftAdd" enterkeyhint="done" autocomplete="off"><button class="ibtn acc" data-a="ftAdd" aria-label="Добавить задачу">${ic('plus',20)}</button></div>`; }
 function shopRowF(x,small){ return `<div class="shrow"><button class="chk-hit" data-a="fsTog" data-id="${x.id}" aria-pressed="${!!x.done}" aria-label="Куплено: ${esc(x.n)}"><span class="chk${x.done?' on':''}">${ic('check',18)}</span></button><span class="grow"><span class="${x.done?'done-t':''}">${esc(x.n)}${x.qty?` <span class="mut">· ${esc(x.qty)}</span>`:''}</span>${x.fa?`<span>${Fam.tag(x.fa)}</span>`:''}</span>${small?'':`<button class="ibtn sm ghostb" data-a="fsDel" data-id="${x.id}" aria-label="Убрать из списка">${ic('close',16)}</button>`}</div>`; }
 function weekCard(){ const M=Fam.members(cur()); const W=weekKeys(); const t=dkey(); const rows=M.map(m=>{ const days=bodyOf(m.id); const n=days?W.filter(k=>days[k]).reduce((s,k)=>s+days[k].n,0):0;
-  return `<span class="row" style="gap:8px;min-width:0">${avatar(m)}<span class="col-xs" style="min-width:0"><span class="b">${m.me?'Вы':esc(m.name)}</span><span class="note">${days?pl(n,['тренировка','тренировки','тренировок']):'не делится'}</span></span></span><span class="wk" style="--mc:${esc(m.color)}">${W.map(k=>`<i class="${days&&days[k]?'on':''}${k===t?' today':''}" title="${fmtDay(k)}${days&&days[k]?': '+esc((days[k].t||[]).join(', ')||'тренировка'):''}"></i>`).join('')}</span>`; }).join('');
+  return `<span class="row" style="gap:8px;min-width:0">${avatar(m)}<span class="col-xs" style="min-width:0"><span class="b">${m.me?'Вы':esc(m.name)}</span><span class="note">${days?pl(n,['тренировка','тренировки','тренировок']):'не делится'}${pregOfM(m.id)?' · беременность '+pregOfM(m.id).w+' нед':''}</span></span></span><span class="wk" style="--mc:${esc(m.color)}">${W.map(k=>`<i class="${days&&days[k]?'on':''}${k===t?' today':''}" title="${fmtDay(k)}${days&&days[k]?': '+esc((days[k].t||[]).join(', ')||'тренировка'):''}"></i>`).join('')}</span>`; }).join('');
  return `<section class="card col-s"><div class="between"><h2 class="sec-h">Тренировки на неделе</h2><span class="wk-h" aria-hidden="true">${WD2.map(d=>`<span>${d.charAt(0)}</span>`).join('')}</span></div><div class="week">${rows}</div></section>`; }
 function pitOffCard(){ const p=Fam.pitFam(); return `<div class="card col-s"><p class="p">${p?`Покупки и продукты дома сейчас общие с семьёй «${esc(Fam.famName(p))}».`:'Покупки и продукты дома пока не общие ни с одной семьёй.'}</p><button class="btn sec sm self-start" data-a="famPit" data-v="${cur()}">Сделать общими с «${esc(Fam.famName(cur()))}»</button><p class="note">Список покупок и холодильник бывают общими только с одной семьёй — с теми, с кем вы живёте.</p></div>`; }
 
 VIEWS.today=()=>wrap(todayV());
 function todayV(){ if(!hasFam()) return famTop()+noticeCard()+`<div class="card">${empty('users','Создайте семью или присоединитесь по приглашению.','<button class="btn pri" data-a="obStart">Начать</button>')}</div>`;
- const k=dkey(); let h=head()+heroCard();
+ const k=dkey(); let h=head()+heroCard()+babyCard();
  const L=todayTasks(); const open=L.filter(t=>!tDone(t,k));
  h+=`<section class="col-s"><div class="between"><h2 class="sec-h">Дела семьи сегодня</h2>${L.length?`<span class="note">${L.length-open.length} из ${L.length}</span>`:''}</div>${L.length?`<div class="tlist">${L.map(t=>taskRowF(t,k)).join('')}</div>`:'<p class="note">Семейных дел на сегодня нет. Добавьте здесь или отметьте задачу в Ритм·Цели.</p>'}${addTaskRow()}</section>`;
  const later=laterTasks().slice(0,4); if(later.length) h+=`<section class="col-s"><h2 class="sec-h">Скоро</h2><div class="tlist">${later.map(t=>`<div class="trow"><button class="tmain" data-a="ftEdit" data-id="${t.id}"><span class="tt">${esc(t.t)}</span><span class="tmeta">${whoTag(t)}<span>${t.date?relDay(t.date):'без даты'}</span></span></button></div>`).join('')}</div></section>`;
@@ -806,6 +841,8 @@ function todayV(){ if(!hasFam()) return famTop()+noticeCard()+`<div class="card"
  if(pays.length) h+=`<section class="card col-s"><h2 class="sec-h">Платежи семьи на неделе</h2>${pays.map(p=>`<div class="between"><span class="col-xs"><span class="b">${esc(p.n)}</span><span class="note">${p.next<k?`<span class="bad-t b">просрочен с ${fmtDay(p.next)}</span>`:p.next===k?'сегодня':relDay(p.next)}</span></span><span class="b">${money(p.sum)}</span></div>`).join('')}<button class="btn sec sm self-start" data-a="openApp" data-v="dengi">Отметить оплату в Деньгах</button></section>`;
  h+=weekCard();
  return h; }
+function babyCard(){ const M=Fam.members(cur()).map(m=>({m,i:pregOfM(m.id)})).filter(x=>x.i); if(!M.length) return '';
+ return `<section class="card col-s"><h2 class="sec-h">Ждём малыша</h2>${M.map(({m,i})=>`<div class="row" style="gap:10px">${avatar(m)}<span class="col-xs"><span class="b">${m.me?'Вы':esc(m.name)} · ${pregLabel(i)}</span><span class="note">${pregLeft(i)} · ПДР ${fmtDayG(pregDue(m.id))}</span></span></div>`).join('')}<p class="note">Срок приходит из Питания или Тела. Подготовку удобно вести целью «Ждём малыша» в Ритм·Цели и семейными задачами.</p></section>`; }
 
 VIEWS.shop=()=>wrap(shopV());
 function shopV(){ if(!hasFam()) return todayV(); let h=head();
@@ -845,7 +882,7 @@ function famV(){ if(!hasFam()) return todayV(); const fid=cur(); const f=Fam.fam
   <div class="list">${M.map(m=>`<button class="mrow li" data-a="push" data-s="member" data-id="${m.id}">${avatar(m,'lg')}<span class="grow col-xs"><span class="b">${esc(m.name)}${m.me?' <span class="mut">· вы</span>':''}</span><span class="note">${[m.role==='admin'?'владелец':'',m.group?esc(groupName(m.group)):'',m.me?'обновлено '+ago(st.at):'обновлял(а) '+ago(m.at)].filter(Boolean).join(' · ')}</span></span><span class="chev">${ic('right',18)}</span></button>`).join('')}</div></section>`;
  h+=`<section class="card col-s"><div class="between"><h2 class="sec-h">Группы</h2>${adm?`<button class="btn ghost sm" data-a="push" data-s="groups">${G.length?'Изменить':'Создать'}</button>`:''}</div>${G.length?`<div class="col-xs">${G.map(g=>{ const ms=M.filter(m=>m.group===g.id); return `<div class="between"><span class="b">${esc(g.name)}</span><span class="note">${ms.length?ms.map(m=>m.me?'вы':esc(m.name)).join(', '):'пусто'}</span></div>`; }).join('')}</div><p class="note">Задачу можно поручить целой группе — она появится у каждого в группе.</p>`:`<p class="note">${adm?'Соберите участников в группы — например, «Взрослые» и «Дети» — чтобы поручать дела сразу группе.':'Группы создаёт владелец семьи.'}</p>`}</section>`;
  h+=`<section class="card col-s"><h2 class="sec-h">Пригласить в семью</h2><p class="p">Отправьте приглашение. Его вставляют в Ритм·Семья → «+ Семья» → «У меня есть приглашение» — на Android или iPhone.</p><div class="code" aria-label="Приглашение">${esc(Fam.invite(fid).slice(0,90))}…</div><div class="split"><button class="btn pri" data-a="invShare">${ic('share',16)} Отправить</button><button class="btn sec" data-a="invCopy">${ic('copy',16)} Скопировать</button></div><p class="note">${ic('lock',13)} В приглашении ключ доступа и ключ шифрования. Отправляйте только своим и удалите сообщение, когда его вставят.</p></section>`;
- h+=`<section class="card col-s"><h2 class="sec-h">Что видит эта семья</h2><div class="chips"><button class="chip" data-a="famPit" data-v="${isPit()?'':fid}" aria-pressed="${isPit()}">Покупки и продукты дома</button><button class="chip" data-a="famBody" aria-pressed="${Fam.shareBody(fid)}">Мои тренировки</button></div><p class="note">Покупки и холодильник бывают общими только с одной семьёй. Задачи, траты и платежи уходят в семью только с её отметкой — в Целях и Деньгах. Остальное остаётся личным.</p></section>`;
+ h+=`<section class="card col-s"><h2 class="sec-h">Что видит эта семья</h2><div class="chips"><button class="chip" data-a="famPit" data-v="${isPit()?'':fid}" aria-pressed="${isPit()}">Покупки и продукты дома</button><button class="chip" data-a="famBody" aria-pressed="${Fam.shareBody(fid)}">Мои тренировки</button>${Fam.myPreg()?`<button class="chip" data-a="famPreg" aria-pressed="${Fam.sharePreg(fid)}">Срок беременности</button>`:''}</div><p class="note">Покупки и холодильник бывают общими только с одной семьёй. Задачи, траты и платежи уходят в семью только с её отметкой — в Целях и Деньгах. Остальное остаётся личным.</p></section>`;
  h+=`<section class="card col-s"><h2 class="sec-h">Вы</h2><label class="fld"><span class="lbl">Имя</span><input class="inp" id="meName" type="text" value="${esc(f.mname)}" maxlength="24" data-c="meName"></label><span class="lbl">Цвет</span><div class="colors">${Fam.COLORS.map(([col,n])=>`<button class="cdot" style="background:${col}" data-a="meColor" data-v="${col}" aria-pressed="${f.color===col}" aria-label="${n}"></button>`).join('')}</div><p class="note">Имя и цвет одинаковые во всех ваших семьях.</p></section>`;
  h+=`<section class="card col-s"><h2 class="sec-h">Синхронизация</h2><p class="p">Данные семьи лежат в закрытом репозитории <b>${esc(f.repo)}</b>${f.dir!=='family'?` (папка ${esc(f.dir)})`:''} на GitHub и зашифрованы на телефоне — без ключа из приглашения их не прочитать.</p><p class="note">${st.err?esc(st.err.msg):'Последняя синхронизация: '+ago(st.at)}</p><div class="row wrap gap6"><button class="btn sec sm" data-a="famSync">${ic('refresh',16)} Синхронизировать</button><button class="btn ghost sm" data-a="push" data-s="token">${ic('key',16)} Обновить ключ доступа</button></div></section>`;
  h+=ui.confirm==='leave'?confirmBox(`Выйти из семьи «${esc(Fam.famName(fid))}»? Ваши задачи и платежи этой семьи останутся у вас как личные, а у семьи пропадут ваши траты и тренировки.`,'famLeave','Выйти'):`<button class="btn ghost danger-t self-start" data-a="ask" data-v="leave">${ic('logout',16)} Выйти из семьи</button>`;
@@ -960,6 +997,7 @@ Object.assign(A,{
  famSync:async()=>{ const r=await Fam.sync({force:true}); if(r&&r.ok) toast('Синхронизировано'); else if(r&&r.locked) toast('Синхронизация уже идёт'); render(); },
  famPit:d=>{ Fam.setPit(d.v||null); render(); toast(d.v?'Покупки и продукты дома — общие с «'+Fam.famName(d.v)+'»':'Покупки и продукты дома больше не общие'); },
  famBody:()=>{ Fam.setShareBody(cur(),!Fam.shareBody(cur())); render(); },
+ famPreg:()=>{ Fam.setSharePreg(cur(),!Fam.sharePreg(cur())); render(); },
  meColor:d=>{ Fam.setMe({color:d.v}); render(); },
  invShare:()=>{ const t='Приглашение в семью «'+Fam.famName(cur())+'» в Ритме. Откройте Ритм·Семья → «У меня есть приглашение» и вставьте:\n\n'+Fam.invite(cur()); if(!Native.share(t,'Ритм — приглашение в семью')) A.invCopy(); },
  invCopy:async()=>{ try{ await navigator.clipboard.writeText(Fam.invite(cur())); toast('Приглашение скопировано'); }catch(e){ toast('Не удалось скопировать'); } },
