@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ритм">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F4F1EC">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="stylesheet" href="ritm-ios.css">
+<title>Ритм</title>
+<script>
+/* Запуск с экрана «Домой»: сразу в последнее открытое приложение */
+(function(){ var P={telo:'telo.html',dengi:'dengi.html',pit:'pitanie.html',tseli:'tseli.html'};
+ var sa=window.navigator.standalone===true||!!(window.matchMedia&&matchMedia('(display-mode: standalone)').matches);
+ var q=(location.search.match(/[?&]app=([a-z]+)/)||[])[1]; var last=null; try{ last=localStorage.getItem('ritm-ios-last'); }catch(e){}
+ var to=q&&P[q]?P[q]:(sa&&last&&P[last]?P[last]:null); if(to){ document.documentElement.className='go'; location.replace(to); } })();
+</script>
+<script>window.RITM_PAGE='start'</script>
+<script src="ritm-ios.js"></script>
+<style>
+:root{--bg:#F4F1EC;--card:#FFFFFF;--sunk:#EFEBE4;--line:#E6E0D6;--ink:#17161A;--muted:#5F5A52;--accent:#F0643C;--f-body:'Onest',system-ui,-apple-system,sans-serif;--f-display:'Unbounded','Onest',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root{--bg:#121110;--card:#1E1C1A;--sunk:#292623;--line:#34302C;--ink:#F2EEE8;--muted:#AFA89E}}
+html.go body{visibility:hidden}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+main{max-width:480px;margin:0 auto;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(32px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:20px}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-g{display:grid;grid-template-columns:repeat(2,20px);gap:4px}
+.logo-g i{width:20px;height:20px;border-radius:6px;display:block}
+h1{font-family:var(--f-display);font-size:28px;font-weight:600;line-height:1.15;margin:0}
+.lead{margin:0;color:var(--muted);font-size:16px}
+.apps{display:flex;flex-direction:column;gap:10px}
+.app{display:flex;align-items:center;gap:14px;padding:14px;background:var(--card);border:1px solid var(--line);border-radius:20px;color:inherit;text-decoration:none;min-height:76px}
+.app:active{background:var(--sunk)}
+.app-t{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;flex-shrink:0}
+.app-m{display:flex;flex-direction:column;flex:1;min-width:0}
+.app-m b{font-size:17px;font-weight:600}
+.app-m small{font-size:14px;color:var(--muted)}
+.chev{width:9px;height:9px;border-right:2px solid var(--muted);border-top:2px solid var(--muted);transform:rotate(45deg);margin-right:6px;flex-shrink:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.card h2{margin:0;font-size:17px;font-weight:600}
+.steps{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+.ico{display:inline-flex;vertical-align:-3px;color:#0A84FF}
+.note{margin:0;color:var(--muted);font-size:14px}
+.acc{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+</style>
+</head>
+<body>
+<main>
+ <div class="logo"><span class="logo-g" aria-hidden="true"><i style="background:#F0643C"></i><i style="background:#2FA36B"></i><i style="background:#F2B33D"></i><i style="background:#6E63F2"></i></span><span class="note" style="font-weight:600;color:var(--ink)">Ритм</span></div>
+ <h1 id="ttl">Приложения для каждого дня</h1>
+ <p class="lead" id="lead">Тренировки, бюджет, питание и цели — с общими данными. Работает без интернета, всё хранится на телефоне.</p>
+ <section class="card acc" id="install" hidden>
+  <h2>Установите на iPhone</h2>
+  <ol class="steps">
+   <li>Откройте эту страницу в <b>Safari</b>.</li>
+   <li>Нажмите «Поделиться» <span class="ico" id="shi"></span> внизу экрана.</li>
+   <li>Прокрутите и выберите <b>«На экран Домой»</b>, затем «Добавить».</li>
+   <li>Откройте Ритм значком на экране «Домой».</li>
+  </ol>
+  <p class="note">Так Ритм открывается на весь экран, работает без интернета, и данные живут в приложении. То, что внесено в Safari, в приложение не переносится.</p>
+ </section>
+ <div class="apps" id="apps"></div>
+ <p class="note" id="foot">Переключаться между приложениями — нажатием на название «Ритм·…» вверху экрана. Напоминания на iPhone не приходят: Apple не даёт веб-приложениям присылать уведомления по расписанию. Резервная копия — в настройках каждого приложения.</p>
+</main>
+<script>
+(function(){ var A=window.RITM_APPS||[], g=window.RITM_GLYPH;
+ document.getElementById('apps').innerHTML=A.map(function(a){ return '<a class="app" href="'+a.page+'" data-id="'+a.id+'"><span class="app-t" style="background:'+a.c+'">'+(g?g(a,24):'')+'</span><span class="app-m"><b>'+a.n+'</b><small>'+a.d+'</small></span><span class="chev" aria-hidden="true"></span></a>'; }).join('');
+ document.getElementById('apps').addEventListener('click',function(e){ var l=e.target.closest('a[data-id]'); if(l) try{ localStorage.setItem('ritm-ios-last',l.getAttribute('data-id')); }catch(x){} });
+ var si=document.getElementById('shi'); if(si&&window.RITM_SHARE_ICON) si.innerHTML=window.RITM_SHARE_ICON();
+ if(!window.RITM_STANDALONE){ document.getElementById('install').hidden=false; if(!window.RITM_ISIOS){ document.querySelector('#install h2').textContent='Для iPhone'; } }
+ else { document.getElementById('ttl').textContent='С чего начнём?'; document.getElementById('lead').textContent='Выберите приложение. В следующий раз Ритм откроется там, где вы остановились.'; }
+})();
+</script>
+</body>
+</html>
